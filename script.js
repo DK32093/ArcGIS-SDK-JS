@@ -1,5 +1,5 @@
-require(["esri/config", "esri/Map", "esri/views/MapView", "esri/layers/ImageryLayer", "esri/widgets/Legend"], 
-    (esriConfig, Map, MapView, ImageryLayer, Legend) => {
+require(["esri/config", "esri/Map", "esri/views/MapView", "esri/layers/ImageryLayer", "esri/layers/FeatureLayer", "esri/widgets/Legend"], 
+    (esriConfig, Map, MapView, ImageryLayer, FeatureLayer, Legend) => {
     const map = new Map({
       basemap: "streets-night-vector"
     });
@@ -37,4 +37,14 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/layers/ImageryLa
         // Add widget to the bottom right corner of the view
         view.ui.add(legend, "bottom-right");
     });
+
+    // add watersheds
+    const WBD_HUC12 = new FeatureLayer({
+    url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer"
+    });
+
+    map.add(WBD_HUC12);
+
   });
+
+// HUC ID: 0109
