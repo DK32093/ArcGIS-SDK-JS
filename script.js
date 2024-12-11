@@ -1,5 +1,12 @@
-require(["esri/config", "esri/Map", "esri/views/MapView", "esri/layers/ImageryLayer", "esri/layers/FeatureLayer", "esri/widgets/Legend"], 
-    (esriConfig, Map, MapView, ImageryLayer, FeatureLayer, Legend) => {
+require(["esri/config", 
+         "esri/Map", 
+         "esri/views/MapView", 
+         "esri/layers/ImageryLayer", 
+         "esri/layers/FeatureLayer",
+         "esri/rest/support/Query",
+         "esri/request",
+         "esri/widgets/Legend"], 
+    (esriConfig, Map, MapView, ImageryLayer, FeatureLayer, Query, esriRequest, Legend) => {
     const map = new Map({
       basemap: "streets-night-vector"
     });
@@ -39,12 +46,36 @@ require(["esri/config", "esri/Map", "esri/views/MapView", "esri/layers/ImageryLa
     });
 
     // add watersheds
-    const WBD_HUC12 = new FeatureLayer({
-    url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer"
+    const WBD_HUC4 = new FeatureLayer({
+    url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer?f=pjson"
     });
 
-    map.add(WBD_HUC12);
+    map.add(WBD_HUC4);
 
-  });
+    console.log(typeof WBD_HUC4)
 
+    // Query WBD for target watershed
+    const query = new Query();
+    query.where = "HUC4 = '0109'";
+    query.outFields = ["*"]; // Get all fields
+    query.returnGeometry = true; 
+    
+    function getWS() {WBD_HUC4.queryFeatures(query).then((featureSet) => {
+          // Process the features
+          const features = featureSet.features; 
+        
+          // Convert features to GeoJSON
+          const geojson = features.map((feature) => {
+            return feature.toJSON();
+          });
+          console.log(typeof geojson)
+          return geojson
+        });
+    }
+    //getWS();
+});
+
+
+ 
+  
 // HUC ID: 0109
