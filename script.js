@@ -47,6 +47,12 @@ require(["esri/config",
       });
       //map.add(WBD_HUC4);
 
+      // Add watersheds
+      const WBD_HUC12 = new FeatureLayer({
+        url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer"
+      });
+      
+
       // get the first layer in the collection of operational layers in the WebMap
       // when the resources in the MapView have loaded.
       const mapLayer = map.layers.getItemAt(1);
@@ -76,73 +82,31 @@ require(["esri/config",
       
         // Convert features to GeoJSON
         const geojson = features.map((feature) => {
-          return {
-            geometry: feature.geometry,
-            symbol: polygonSymbol
-          }
+          return geom = feature.geometry
         });
-        view.graphics.addMany(geojson);
-        console.log(geojson)
-      }).then(result => {
-        //const watershed = result[0].geometry;
-        //graphicsLayer.add(result)
         
-        console.log(result)
+        const query2 = new Query({
+          geometry: geom,
+          spatialRelationship: "intersects", // Use the appropriate spatial relationship
+          returnGeometry: true,
+          outFields: ["*"] // Specify the fields you want to retrieve
+        });
+        
+        WBD_HUC12.queryFeatures(query2).then((featureSet) => {
+          // Process the features
+          const features2 = featureSet.features; 
+        
+          // Convert features to GeoJSON
+          const geojson2 = features2.map((feature) => {
+            return {
+              geometry: feature.geometry,
+              symbol: polygonSymbol
+            }
+          })
+          view.graphics.addMany(geojson2);
+          console.log(geojson2)
+        })
       })
     })
   }
 )
-    
-
-    // Query WBD for target watershed
-    // const query = new Query();
-    // query.where = "HUC4 = '0109'";
-    // query.outFields = ["*"]; // Get all fields
-    // query.returnGeometry = true; 
-    
-    // view.when() // Wait for the view to be fully loaded
-    //   .then(() => {
-    //     const HUC4_1090 = WBD_HUC4.queryFeatures(query).then((featureSet) => {
-    //       // Process the features
-    //       const features = featureSet.features; 
-        
-    //       // Convert features to GeoJSON
-    //       const geojson = features.map((feature) => {
-    //         return feature.toJSON();
-    //       });
-    //       return geojson
-    //     });
-    
-        
-
-    // console.log(HUC4_1090);
-    // try {
-    //   await WBD_HUC4.load();
-    //   const HUC4_1090 = WBD_HUC4.queryFeatures(query).then((featureSet) => {
-    //     // Process the features
-    //     const features = featureSet.features; 
-      
-    //     // Convert features to GeoJSON
-    //     const geojson = features.map((feature) => {
-    //       return feature.toJSON();
-    //     });
-    //     return geojson
-    //   });
-    //   map.add(HUC4_1090)
-    // } catch (error) {
-    //   console.error("Error here", error);
-    // }
-    
-    
-    //geojson[0].geometry
-    //map.add(HUC4_1090);
-
-    //const clippedSentinel2 = Sentinel2.clip(HUC4_1090)
-    //getWS();
-
-
-
-
-
-
-// HUC ID: 0109
