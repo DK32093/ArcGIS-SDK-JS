@@ -9,8 +9,21 @@ require(["esri/config",
          "esri/symbols/SimpleFillSymbol",
          "esri/rest/support/Query",
          "esri/request",
-         "esri/widgets/Legend"], 
-  (esriConfig, Map, MapView, ImageryLayer, FeatureLayer, GeoJSONLayer, Graphic, GraphicsLayer, SimpleFillSymbol, Query, esriRequest, Legend) => {
+         "esri/widgets/Legend",
+         "esri/core/reactiveUtils"], 
+  (esriConfig, 
+   Map, 
+   MapView, 
+   ImageryLayer, 
+   FeatureLayer, 
+   GeoJSONLayer, 
+   Graphic, 
+   GraphicsLayer, 
+   SimpleFillSymbol, 
+   Query, 
+   esriRequest, 
+   Legend,
+   reactiveUtils) => {
     const map = new Map({
       basemap: "streets-night-vector"
     });
@@ -22,15 +35,47 @@ require(["esri/config",
       zoom: 8
     });
 
-    const graphicsLayer = new GraphicsLayer();
-    map.add(graphicsLayer);
+    //const graphicsLayer = new GraphicsLayer();
+    //map.add(graphicsLayer);
 
     const polygonSymbol = new SimpleFillSymbol({
-      color: [255, 0, 0, 0.4], // Red with some transparency
+      color: [0, 0, 0, 0],
       outline: {
-        color: [255, 0, 0], // Red outline
+        color: [0, 0, 0],
         width: 2
       }
+    });
+
+    const highlightSymbol = new SimpleFillSymbol({
+      color: [0, 0, 255, 0.5],
+      outline: {
+        color: [0, 0, 255],
+        width: 2
+      }
+    });
+
+    // Highlight on hover logic
+    let previousID;
+    let previousGraphic;
+    view.graphics.watch("length", () => {
+      view.on("pointer-move", (event) => {
+        view.hitTest(event).then((hitTestResult) => {
+          if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
+            const graphic = hitTestResult.results[0].graphic;
+            HUC_ID = graphic.id 
+            if(previousID !== HUC_ID){
+              if (previousGraphic) {
+                if (previousGraphic.symbol === highlightSymbol){
+                  previousGraphic.symbol = polygonSymbol
+                }
+              }
+              graphic.symbol = highlightSymbol;
+              previousID = HUC_ID
+              previousGraphic = graphic
+            }
+          }
+        })
+      })
     });
 
     view.when().then(() => {
@@ -55,7 +100,7 @@ require(["esri/config",
 
       // get the first layer in the collection of operational layers in the WebMap
       // when the resources in the MapView have loaded.
-      const mapLayer = map.layers.getItemAt(1);
+      const mapLayer = map.layers.getItemAt(0);
       mapLayer.title = "Land Cover Classes"
   
       const legend = new Legend({
@@ -71,20 +116,19 @@ require(["esri/config",
       // Add widget to the bottom right corner of the view
       view.ui.add(legend, "bottom-right");
 
-      // Query - move later
+      // First query 
       const query = new Query();
       query.where = "HUC4 = '0109'";
-      query.outFields = ["*"]; // Get all fields
+      query.outFields = ["*"];
       query.returnGeometry = true; 
-      const HUC4_1090 = WBD_HUC4.queryFeatures(query).then((featureSet) => {
-        // Process the features
+
+      WBD_HUC4.queryFeatures(query).then((featureSet) => {
         const features = featureSet.features; 
-      
-        // Convert features to GeoJSON
-        const geojson = features.map((feature) => {
+        features.map((feature) => {
           return geom = feature.geometry
         });
         
+        // Second query
         const query2 = new Query({
           geometry: geom,
           spatialRelationship: "intersects", // Use the appropriate spatial relationship
@@ -93,20 +137,18 @@ require(["esri/config",
         });
         
         WBD_HUC12.queryFeatures(query2).then((featureSet) => {
-          // Process the features
           const features2 = featureSet.features; 
-        
-          // Convert features to GeoJSON
           const geojson2 = features2.map((feature) => {
             return {
               geometry: feature.geometry,
-              symbol: polygonSymbol
+              symbol: polygonSymbol,
+              id: feature.attributes.HUC12
             }
           })
           view.graphics.addMany(geojson2);
-          console.log(geojson2)
-        })
-      })
-    })
+        });
+      });
+    });
   }
-)
+);
+  
