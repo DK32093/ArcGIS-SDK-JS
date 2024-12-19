@@ -1,7 +1,7 @@
 require(["esri/config",
          "esri/Map", 
          "esri/views/MapView", 
-         "esri/layers/ImageryLayer", 
+         "esri/layers/ImageryLayer", //possibly revert to imagelayer
          "esri/layers/FeatureLayer",
          "esri/layers/GeoJSONLayer",
          "esri/Graphic",
@@ -10,7 +10,13 @@ require(["esri/config",
          "esri/rest/support/Query",
          "esri/request",
          "esri/widgets/Legend",
-         "esri/core/reactiveUtils"], 
+         "esri/core/reactiveUtils",
+         "esri/layers/support/RasterFunction",
+         "esri/geometry/Polygon",
+         "esri/rest/support/ImageIdentifyParameters",
+         "esri/rest/support/ImageHistogramParameters",
+         "esri/widgets/Histogram",
+         "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"], 
   (esriConfig, 
    Map, 
    MapView, 
@@ -23,17 +29,54 @@ require(["esri/config",
    Query, 
    esriRequest, 
    Legend,
-   reactiveUtils) => {
+   reactiveUtils,
+   RasterFunction,
+   Polygon,
+   ImageIdentifyParameters,
+   ImageHistogramParameters,
+   Histogram,
+   Chart) => {
     const map = new Map({
       basemap: "streets-night-vector"
     });
-  
+    
+
+    var dojoConfig = {
+      packages: [
+        {
+          name: "Chart",
+          location: location.pathname.replace(/\/[^/]+$/, "") + "/node_modules/chart.js"
+        },
+      ]
+    };
+
     const view = new MapView({
       container: "viewDiv",
       map: map,
       center: [-70.88045846458392, 42.03704144231204],
       zoom: 8
     });
+
+    const Sentinel2 = new ImageryLayer({
+      url: "https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer",
+      format: "jpgpng",
+
+      // rasterFunction: new RasterFunction({
+      //   functionName: "YearFilter", // Example function name
+      //   functionArguments: {
+      //     Year: 2022
+      //   }
+      // })
+    });
+    map.add(Sentinel2);
+
+    const timeExtent = {
+      start: new Date(Date.UTC(2023, 0, 1)),
+      end: new Date(Date.UTC(2023, 11, 31))
+    };
+    
+    view.timeExtent = timeExtent; 
+
 
     //const graphicsLayer = new GraphicsLayer();
     //map.add(graphicsLayer);
@@ -53,6 +96,8 @@ require(["esri/config",
         width: 2
       }
     });
+
+    
 
     // Highlight on hover logic
     let previousID;
@@ -78,31 +123,82 @@ require(["esri/config",
       })
     });
 
+    view.on("click", (event) => {
+      view.hitTest(event).then((hitTestResult) => {
+        if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
+          const clickedFeature = hitTestResult.results[0].graphic
+          console.log(view.timeExtent); 
+          let pixelSize = {
+            x:view.resolution,
+            y:view.resolution,
+            spatialReference: {
+              wkid: view.spatialReference.wkid
+            }
+          }
+          // set the histogram parameters to request
+          // data for the current view extent and resolution
+          let params = new ImageHistogramParameters({
+            geometry:  clickedFeature.geometry,
+            
+          });
+          Sentinel2.computeHistograms(params).then((result) => {
+            console.log(result.histograms)
+            const histogramWidget = new Histogram({
+              container: "histogramDiv",
+              view: view,
+              layer: Sentinel2
+            });
+            Sentinel2.histogram = result.histograms[0]
+
+            const sum = result.histograms[0].counts.reduce((accumulator, current) => accumulator + current, 0);
+
+            const ctx = document.getElementById("histogramDiv");
+
+            new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
+                datasets: [{
+                  label: '# of Votes',
+                  data: (result.histograms[0].counts.map(number => (number / sum) * 100)),
+                  borderWidth: 1
+                }]
+              },
+              // options: {
+              //   scales: {
+              //     yAxes: [{
+              //       ticks: {
+              //         max : 100,    
+              //         min : 0
+              //       }
+              //     }]
+              //   }
+              // }
+            });
+
+            view.ui.add(histogramWidget, "top-right")
+          });
+        }
+      })
+    })
+
     view.when().then(() => {
       // Add land cover
-      const Sentinel2 = new ImageryLayer({
-        url: "https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer",
-        format: "jpgpng"
-      });
-      map.add(Sentinel2);
+      
 
-      // Add watersheds
+      // Get HUC4 watersheds
       const WBD_HUC4 = new FeatureLayer({
         url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer?f=pjson"
       });
-      //map.add(WBD_HUC4);
 
-      // Add watersheds
+      // Get HUC12 watersheds
       const WBD_HUC12 = new FeatureLayer({
         url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer"
       });
       
-
-      // get the first layer in the collection of operational layers in the WebMap
-      // when the resources in the MapView have loaded.
-      const mapLayer = map.layers.getItemAt(0);
+      // Legend
+      const mapLayer = map.layers.getItemAt(0); // get first layer in collection
       mapLayer.title = "Land Cover Classes"
-  
       const legend = new Legend({
         view: view,
         layerInfos: [
@@ -112,9 +208,7 @@ require(["esri/config",
           }
         ]
       });
-  
-      // Add widget to the bottom right corner of the view
-      view.ui.add(legend, "bottom-right");
+      //view.ui.add(legend, "bottom-right");
 
       // First query 
       const query = new Query();
@@ -131,9 +225,9 @@ require(["esri/config",
         // Second query
         const query2 = new Query({
           geometry: geom,
-          spatialRelationship: "intersects", // Use the appropriate spatial relationship
+          spatialRelationship: "intersects",
           returnGeometry: true,
-          outFields: ["*"] // Specify the fields you want to retrieve
+          outFields: ["*"]
         });
         
         WBD_HUC12.queryFeatures(query2).then((featureSet) => {

@@ -6,7 +6,21 @@
     <title>Document</title>
 
    
-    <script src="turf.min.js" charset="utf-8"></script>
+
+    <script>
+        const options = {
+            // tell Dojo where to load other packages
+            dojoConfig: {
+                async: true,
+            packages: [
+                {
+                    location: 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js',
+                    name: 'Chart'
+                }
+            ]
+            }
+        };
+    </script>
 
     <!-- Load Calcite components from CDN -->
     <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/2.13.2/calcite.css" />
@@ -30,5 +44,8 @@
 </head>
 <body>
     <div id="viewDiv"></div>
+    <div class="chartDiv">
+        <canvas id="histogramDiv"><canvas>
+    </div>
 </body>
 </html>
