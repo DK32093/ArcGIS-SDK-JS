@@ -15,8 +15,7 @@ require(["esri/config",
          "esri/geometry/Polygon",
          "esri/rest/support/ImageIdentifyParameters",
          "esri/rest/support/ImageHistogramParameters",
-         "esri/widgets/Histogram",
-         "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"], 
+         "esri/widgets/Histogram"], 
   (esriConfig, 
    Map, 
    MapView, 
@@ -34,8 +33,7 @@ require(["esri/config",
    Polygon,
    ImageIdentifyParameters,
    ImageHistogramParameters,
-   Histogram,
-   Chart) => { // update chart.js version to 3.x plus to make this work - this might make it necessary to add plugin to legend display = false tree in option
+   Histogram) => { // update chart.js version to 3.x plus to make this work - this might make it necessary to add plugin to legend display = false tree in option
     const map = new Map({
       basemap: "streets-night-vector"
     });
@@ -114,6 +112,8 @@ require(["esri/config",
     });
 
     // Generate chart on click
+    let displayChart;
+    Chart.register(ChartDataLabels);
     view.on("click", (event) => {
       view.hitTest(event).then((hitTestResult) => {
         if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
@@ -144,6 +144,13 @@ require(["esri/config",
             const histogramWidget = new Histogram({
               container: "histogramDiv"
             });
+            
+            
+            let chartStatus = Chart.getChart("histogramDiv"); // <canvas> id
+            if (chartStatus != undefined) {
+              chartStatus.destroy();
+            }
+
             const ctx = document.getElementById("histogramDiv");
             new Chart(ctx, {
               type: 'bar',
@@ -166,10 +173,33 @@ require(["esri/config",
                 }]
               },
               options: {
-                events: [],
-                legend: {
-                  display: false 
-                },
+                responsive: true,
+                plugins: {
+                  legend: {
+                    display: false,
+                  },
+                  datalabels: {
+                    formatter: (value, ctx) => {
+                      if (value >= 1 ) {
+                        displayValue = Math.round(value) + "%"
+                        return displayValue;
+                      } else if (value > 0 && value < 1) {
+                        return displayValue = "<1%"
+                      } else {
+                        return ''
+                      }
+                    },
+                    anchor: 'end',
+                    align: 'top',
+                    labels: {
+                      value: {
+                        color: 'blue'
+                      }
+                    }
+                    
+                  }
+                }
+               
                 // scales: {
                 //   yAxes: [{
                 //     ticks: {
@@ -179,6 +209,7 @@ require(["esri/config",
                 //   }]
                 // }
               }
+              
             });
 
             view.ui.add(histogramWidget, "top-right")

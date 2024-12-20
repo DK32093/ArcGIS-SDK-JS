@@ -8,7 +8,7 @@ body,
 }
 
 .chartDiv {
-  width: 25rem;
+  width: 35rem;
   -height: 400px;
   background-color: none;
   border: 1px solid #ccc;
@@ -17,4 +17,5 @@ body,
 
 #histogramDiv {
   padding: 1rem;
+  width: 35rem;
 }
