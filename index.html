@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 
-   
-
     <script>
         const options = {
-            // tell Dojo where to load other packages
             dojoConfig: {
                 async: true,
-            packages: [
-                {
-                    location: 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js',
-                    name: 'Chart'
-                }
-            ]
+                packages: [
+                    {
+                        location: 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js',
+                        name: 'Chart'
+                    },
+                    {
+                        // location: 'https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.js',
+                        // name: 'datalabels'
+                    }
+                ]
             }
         };
     </script>

@@ -35,20 +35,10 @@ require(["esri/config",
    ImageIdentifyParameters,
    ImageHistogramParameters,
    Histogram,
-   Chart) => {
+   Chart) => { // update chart.js version to 3.x plus to make this work - this might make it necessary to add plugin to legend display = false tree in option
     const map = new Map({
       basemap: "streets-night-vector"
     });
-    
-
-    var dojoConfig = {
-      packages: [
-        {
-          name: "Chart",
-          location: location.pathname.replace(/\/[^/]+$/, "") + "/node_modules/chart.js"
-        },
-      ]
-    };
 
     const view = new MapView({
       container: "viewDiv",
@@ -70,11 +60,11 @@ require(["esri/config",
     });
     map.add(Sentinel2);
 
+    // Set time extent to 2023
     const timeExtent = {
       start: new Date(Date.UTC(2023, 0, 1)),
       end: new Date(Date.UTC(2023, 11, 31))
     };
-    
     view.timeExtent = timeExtent; 
 
 
@@ -123,57 +113,72 @@ require(["esri/config",
       })
     });
 
+    // Generate chart on click
     view.on("click", (event) => {
       view.hitTest(event).then((hitTestResult) => {
         if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
           const clickedFeature = hitTestResult.results[0].graphic
-          console.log(view.timeExtent); 
-          let pixelSize = {
-            x:view.resolution,
-            y:view.resolution,
-            spatialReference: {
-              wkid: view.spatialReference.wkid
-            }
-          }
-          // set the histogram parameters to request
-          // data for the current view extent and resolution
+          console.log(clickedFeature.length)
           let params = new ImageHistogramParameters({
             geometry:  clickedFeature.geometry,
-            
           });
           Sentinel2.computeHistograms(params).then((result) => {
             console.log(result.histograms)
-            const histogramWidget = new Histogram({
-              container: "histogramDiv",
-              view: view,
-              layer: Sentinel2
-            });
-            Sentinel2.histogram = result.histograms[0]
-
+            
+            // Filter out empty classes
+            const allCounts = result.histograms[0].counts
+            console.log(allCounts)
+            const ranges = [[1,2], [4,5], [7,11]]
+            function filterHist(array, ranges) {
+              return array.filter((_, index) => {
+                return ranges.some(([start, end]) => index >= start && index <= end);
+              });
+            }
+            const filteredData = filterHist(allCounts, ranges);
+            console.log(filteredData); 
+            
+            // Sum pixels in watershed
             const sum = result.histograms[0].counts.reduce((accumulator, current) => accumulator + current, 0);
 
+            // Create chart
+            const histogramWidget = new Histogram({
+              container: "histogramDiv"
+            });
             const ctx = document.getElementById("histogramDiv");
-
             new Chart(ctx, {
               type: 'bar',
               data: {
-                labels: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
+                labels: ["1", "2", "4", "5", "7", "8", "9", "10", "11"],
                 datasets: [{
-                  label: '# of Votes',
-                  data: (result.histograms[0].counts.map(number => (number / sum) * 100)),
-                  borderWidth: 1
+                  data: (filteredData.map(number => (number / sum) * 100)),
+                  borderWidth: 1,
+                  backgroundColor: [
+                    'rgb(26, 91, 171)',
+                    'rgb(53, 130, 33)',
+                    'rgb(135, 209, 158)',
+                    'rgb(255, 219, 92)',
+                    'rgb(237, 2, 42)',
+                    'rgb(237, 233, 228)',
+                    'rgb(200, 200, 200)',
+                    'rgb(242, 250, 255)',
+                    'rgb(239, 207, 168)'
+                  ]
                 }]
               },
-              // options: {
-              //   scales: {
-              //     yAxes: [{
-              //       ticks: {
-              //         max : 100,    
-              //         min : 0
-              //       }
-              //     }]
-              //   }
-              // }
+              options: {
+                events: [],
+                legend: {
+                  display: false 
+                },
+                // scales: {
+                //   yAxes: [{
+                //     ticks: {
+                //       max : 100,    
+                //       min : 0
+                //     }
+                //   }]
+                // }
+              }
             });
 
             view.ui.add(histogramWidget, "top-right")
@@ -183,9 +188,6 @@ require(["esri/config",
     })
 
     view.when().then(() => {
-      // Add land cover
-      
-
       // Get HUC4 watersheds
       const WBD_HUC4 = new FeatureLayer({
         url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer?f=pjson"
@@ -197,8 +199,8 @@ require(["esri/config",
       });
       
       // Legend
-      const mapLayer = map.layers.getItemAt(0); // get first layer in collection
-      mapLayer.title = "Land Cover Classes"
+      const mapLayer = map.layers.getItemAt(0); // get first layer
+      mapLayer.title = "2023 Land Cover Classes"
       const legend = new Legend({
         view: view,
         layerInfos: [
@@ -208,7 +210,7 @@ require(["esri/config",
           }
         ]
       });
-      //view.ui.add(legend, "bottom-right");
+      view.ui.add(legend, "bottom-right");
 
       // First query 
       const query = new Query();
@@ -231,13 +233,27 @@ require(["esri/config",
         });
         
         WBD_HUC12.queryFeatures(query2).then((featureSet) => {
-          const features2 = featureSet.features; 
-          const geojson2 = features2.map((feature) => {
-            return {
-              geometry: feature.geometry,
-              symbol: polygonSymbol,
-              id: feature.attributes.HUC12
+          const features2 = featureSet.features;
+          // Check watershed size to prevent request size limit errors 
+          features2.forEach((feature) => {
+            const length = feature.attributes.Shape__Length
+            const area = feature.attributes.Shape__Area
+            if (length > 130000 || area > 320000000) {
+              const id = feature.attributes.HUC12
+              const index = features2.findIndex(feature => {
+                return feature.attributes.HUC12 === id;
+              });
+              features2.splice(index, 1);
             }
+          })
+          const geojson2 = features2.map((feature) => {
+              return {
+                geometry: feature.geometry,
+                symbol: polygonSymbol,
+                id: feature.attributes.HUC12,
+                length: feature.attributes.Shape__Length,
+                area: feature.attributes.Shape__Area
+              }
           })
           view.graphics.addMany(geojson2);
         });
