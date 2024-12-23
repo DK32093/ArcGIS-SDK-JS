@@ -15,7 +15,9 @@ require(["esri/config",
          "esri/geometry/Polygon",
          "esri/rest/support/ImageIdentifyParameters",
          "esri/rest/support/ImageHistogramParameters",
-         "esri/widgets/Histogram"], 
+         "esri/widgets/Histogram",
+         "esri/layers/support/LabelClass",
+         "esri/symbols/TextSymbol"], 
   (esriConfig, 
    Map, 
    MapView, 
@@ -33,7 +35,9 @@ require(["esri/config",
    Polygon,
    ImageIdentifyParameters,
    ImageHistogramParameters,
-   Histogram) => { 
+   Histogram,
+   LabelClass,
+   TextSymbol) => { 
     const map = new Map({
       basemap: "streets-night-vector"
     });
@@ -57,11 +61,6 @@ require(["esri/config",
       //   }
       // })
     });
-
-
-
-   
-   
     map.add(Sentinel2);
 
     // Set time extent to 2023
@@ -69,7 +68,30 @@ require(["esri/config",
       start: new Date(Date.UTC(2023, 0, 1)),
       end: new Date(Date.UTC(2023, 11, 31))
     };
-    view.timeExtent = timeExtent; 
+    view.timeExtent = timeExtent;
+
+
+
+    const labelClass = new LabelClass({
+      symbol: new TextSymbol({
+        color: "white",
+        font: {
+          family: "Arial",
+          size: 10
+        }
+      }),
+      labelExpressionInfo: {
+        expression: "$feature.gaz_name" // Use the desired field for the label
+      },
+      labelPlacement: "above-center" // Adjust the placement as needed
+    });
+
+    const places = new FeatureLayer({
+      url: "https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/Geonames_Places_Points_v1/FeatureServer",
+      labelingInfo: [labelClass]
+    });
+    console.log(places)
+    map.add(places)
 
     const polygonSymbol = new SimpleFillSymbol({
       color: [0, 0, 0, 0],
@@ -321,7 +343,6 @@ require(["esri/config",
       });
       // Legend
       const mapLayer = map.layers.getItemAt(0); // Land cover
-      console.log(mapLayer)
       mapLayer.title = ""
       const mapLayer2 = map.layers.getItemAt(1); // Watershed boundaries
       const legend = new Legend({
@@ -339,7 +360,6 @@ require(["esri/config",
         ]
       }, "legend"); // Add class
       legend.respectLayerVisibility = false
-      console.log(legend)
       view.ui.add(legend, "bottom-right");
 
       // Remove No Data from legend after the widget redraws twice (once for each layer)
@@ -363,7 +383,6 @@ require(["esri/config",
         const Sentinel2Legend = parentElement[1];
         if (Sentinel2Legend) {
           const lastChild = Sentinel2Legend.lastElementChild;
-          console.log(lastChild);
           lastChild.remove();
         }
       }
