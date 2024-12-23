@@ -8,14 +8,28 @@ body,
 }
 
 .chartDiv {
-  width: 35rem;
-  -height: 400px;
+  width: 30rem;
   background-color: none;
   border: 1px solid #ccc;
   overflow: auto;
+  
 }
 
 #histogramDiv {
-  padding: 1rem;
-  width: 35rem;
+  padding: 1rem 1rem 1rem 1rem;
+  width: 30rem;
+  height: 20rem;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 1rem;
+}
+
+#legend {
+  width: 30rem;
+  border-radius: 1rem;
+}
+
+.esri-legend__layer-body {
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(3, 1fr);
 }

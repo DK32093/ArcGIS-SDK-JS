@@ -1,7 +1,7 @@
 require(["esri/config",
          "esri/Map", 
          "esri/views/MapView", 
-         "esri/layers/ImageryLayer", //possibly revert to imagelayer
+         "esri/layers/ImageryLayer",
          "esri/layers/FeatureLayer",
          "esri/layers/GeoJSONLayer",
          "esri/Graphic",
@@ -33,7 +33,7 @@ require(["esri/config",
    Polygon,
    ImageIdentifyParameters,
    ImageHistogramParameters,
-   Histogram) => { // update chart.js version to 3.x plus to make this work - this might make it necessary to add plugin to legend display = false tree in option
+   Histogram) => { 
     const map = new Map({
       basemap: "streets-night-vector"
     });
@@ -42,12 +42,13 @@ require(["esri/config",
       container: "viewDiv",
       map: map,
       center: [-70.88045846458392, 42.03704144231204],
-      zoom: 8
+      zoom: 7
     });
 
     const Sentinel2 = new ImageryLayer({
       url: "https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer",
       format: "jpgpng",
+     
 
       // rasterFunction: new RasterFunction({
       //   functionName: "YearFilter", // Example function name
@@ -56,6 +57,11 @@ require(["esri/config",
       //   }
       // })
     });
+
+
+
+   
+   
     map.add(Sentinel2);
 
     // Set time extent to 2023
@@ -64,10 +70,6 @@ require(["esri/config",
       end: new Date(Date.UTC(2023, 11, 31))
     };
     view.timeExtent = timeExtent; 
-
-
-    //const graphicsLayer = new GraphicsLayer();
-    //map.add(graphicsLayer);
 
     const polygonSymbol = new SimpleFillSymbol({
       color: [0, 0, 0, 0],
@@ -84,8 +86,6 @@ require(["esri/config",
         width: 2
       }
     });
-
-    
 
     // Highlight on hover logic
     let previousID;
@@ -112,22 +112,17 @@ require(["esri/config",
     });
 
     // Generate chart on click
-    let displayChart;
     Chart.register(ChartDataLabels);
     view.on("click", (event) => {
       view.hitTest(event).then((hitTestResult) => {
         if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
           const clickedFeature = hitTestResult.results[0].graphic
-          console.log(clickedFeature.length)
           let params = new ImageHistogramParameters({
             geometry:  clickedFeature.geometry,
           });
           Sentinel2.computeHistograms(params).then((result) => {
-            console.log(result.histograms)
-            
             // Filter out empty classes
             const allCounts = result.histograms[0].counts
-            console.log(allCounts)
             const ranges = [[1,2], [4,5], [7,11]]
             function filterHist(array, ranges) {
               return array.filter((_, index) => {
@@ -135,27 +130,28 @@ require(["esri/config",
               });
             }
             const filteredData = filterHist(allCounts, ranges);
-            console.log(filteredData); 
             
             // Sum pixels in watershed
             const sum = result.histograms[0].counts.reduce((accumulator, current) => accumulator + current, 0);
+
+          
+            
+            // Clear canvas for new chart
+            let chartStatus = Chart.getChart("histogramDiv");
+            if (chartStatus != undefined) {
+              chartStatus.destroy();
+            }
 
             // Create chart
             const histogramWidget = new Histogram({
               container: "histogramDiv"
             });
-            
-            
-            let chartStatus = Chart.getChart("histogramDiv"); // <canvas> id
-            if (chartStatus != undefined) {
-              chartStatus.destroy();
-            }
-
+            // get chart div then create histogramDiv and append as child
             const ctx = document.getElementById("histogramDiv");
             new Chart(ctx, {
               type: 'bar',
               data: {
-                labels: ["1", "2", "4", "5", "7", "8", "9", "10", "11"],
+                labels: ["Water", "Trees", "Flooded Veg.", "Crops", "Built Area", "Bare Ground", "Snow/Ice", "Clouds", "Rangeland"],
                 datasets: [{
                   data: (filteredData.map(number => (number / sum) * 100)),
                   borderWidth: 1,
@@ -174,6 +170,7 @@ require(["esri/config",
               },
               options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                   legend: {
                     display: false,
@@ -181,8 +178,7 @@ require(["esri/config",
                   datalabels: {
                     formatter: (value, ctx) => {
                       if (value >= 1 ) {
-                        displayValue = Math.round(value) + "%"
-                        return displayValue;
+                        return displayValue = Math.round(value) + "%"
                       } else if (value > 0 && value < 1) {
                         return displayValue = "<1%"
                       } else {
@@ -193,30 +189,71 @@ require(["esri/config",
                     align: 'top',
                     labels: {
                       value: {
-                        color: 'blue'
+                        color: 'white',
                       }
+                    },
+                    font: {
+                      weight: 'bold',
+                      size: 16,
                     }
-                    
+                  }
+                },
+                scales: {
+                  x: {
+                    ticks: {
+                        maxRotation: 65,
+                        minRotation: 65,
+                        color: 'white',
+                        font: {
+                          size: 15,
+                        }
+                    },
+                    grid: {
+                      display:false
+                    } 
+                  },
+                  y: {
+                    ticks: {
+                      display: false
+                    },
+                    grid: {
+                      display:false
+                    } 
+                  }
+                },
+                layout: {
+                  padding: {
+                       top: 25
                   }
                 }
-               
-                // scales: {
-                //   yAxes: [{
-                //     ticks: {
-                //       max : 100,    
-                //       min : 0
-                //     }
-                //   }]
-                // }
               }
-              
             });
-
             view.ui.add(histogramWidget, "top-right")
           });
         }
       })
     })
+
+
+    // reference
+    // scales: {
+    //   yAxes: [{
+    //     ticks: {
+    //       max : 100,    
+    //       min : 0
+    //     }
+    //   }]
+    // }
+
+    
+    
+       
+
+      
+   
+
+  
+
 
     view.when().then(() => {
       // Get HUC4 watersheds
@@ -226,22 +263,15 @@ require(["esri/config",
 
       // Get HUC12 watersheds
       const WBD_HUC12 = new FeatureLayer({
-        url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer"
+        url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer",
+        renderer: {
+          type: "simple",
+          symbol: polygonSymbol
+        }
       });
-      
-      // Legend
-      const mapLayer = map.layers.getItemAt(0); // get first layer
-      mapLayer.title = "2023 Land Cover Classes"
-      const legend = new Legend({
-        view: view,
-        layerInfos: [
-          {
-            layer: mapLayer,
-            title: ""
-          }
-        ]
-      });
-      view.ui.add(legend, "bottom-right");
+      // Add to map to include in legend - but only the subset are visible as graphics
+      map.add(WBD_HUC12);
+      WBD_HUC12.visible = false;
 
       // First query 
       const query = new Query();
@@ -289,7 +319,57 @@ require(["esri/config",
           view.graphics.addMany(geojson2);
         });
       });
-    });
+      // Legend
+      const mapLayer = map.layers.getItemAt(0); // Land cover
+      console.log(mapLayer)
+      mapLayer.title = ""
+      const mapLayer2 = map.layers.getItemAt(1); // Watershed boundaries
+      const legend = new Legend({
+        view: view,
+        layerInfos: [
+          {
+            layer: mapLayer,
+            sublayers: [{ id: 1 }],
+            title: "2023 Land Cover Classes"
+          },
+          {
+            layer: mapLayer2,
+            title: "HUC 12 Watershed Boundaries"
+          }
+        ]
+      }, "legend"); // Add class
+      legend.respectLayerVisibility = false
+      console.log(legend)
+      view.ui.add(legend, "bottom-right");
+
+      // Remove No Data from legend after the widget redraws twice (once for each layer)
+      let i = 0;
+      function waitForCollectionLength(collection, targetLength, callback) {
+        const checkInterval = setInterval(() => {
+          if (collection.length === targetLength) {
+            i += 1;
+            if (i == 3) {
+              clearInterval(checkInterval);
+            } else {
+              callback();
+            }
+          }
+        }, 300) // Check every 100 milliseconds
+      }
+  
+      // The callback function to remove the No Data legend item (last child)
+      function removeNoDataFromLegend() {
+        const parentElement = document.getElementsByClassName("esri-legend__layer-body")
+        const Sentinel2Legend = parentElement[1];
+        if (Sentinel2Legend) {
+          const lastChild = Sentinel2Legend.lastElementChild;
+          console.log(lastChild);
+          lastChild.remove();
+        }
+      }
+        const parentElement = document.getElementsByClassName("esri-legend__layer-body")
+        waitForCollectionLength(parentElement, 2, removeNoDataFromLegend) 
+    })
   }
 );
   
