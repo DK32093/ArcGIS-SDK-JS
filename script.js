@@ -142,6 +142,7 @@ require(["esri/config",
       view.hitTest(event).then((hitTestResult) => {
         if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
           const clickedFeature = hitTestResult.results[0].graphic
+          const watershedName = clickedFeature.name
           let params = new ImageHistogramParameters({
             geometry:  clickedFeature.geometry,
           });
@@ -167,17 +168,18 @@ require(["esri/config",
               previousDiv.remove()
             }
 
+            // Create and append the new canvas
             const chartDiv = document.getElementById("chartDiv");
             const histogramDiv = document.createElement("canvas");
             histogramDiv.id = "histogramDiv";
             chartDiv.appendChild(histogramDiv)
-            // Create chart
+
+            // Create new chart
             const histogramWidget = new Histogram({
               container: "histogramDiv"
             });
-            // get chart div then create histogramDiv and append as child
-            const ctx = document.getElementById("histogramDiv");
-            new Chart(ctx, {
+
+            new Chart(histogramDiv, {
               type: 'bar',
               data: {
                 labels: SentinelLabels,
@@ -191,6 +193,17 @@ require(["esri/config",
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
+                  title: {
+                    display: true,
+                    text: watershedName,
+                    font: {
+                      size: 16,
+                      weight: 'bold'
+                    },
+                    padding: {
+                      bottom: 25 // Add 20px of space below the title
+                    }
+                  },
                   legend: {
                     display: false,
                   },
@@ -208,7 +221,7 @@ require(["esri/config",
                     align: 'top',
                     labels: {
                       value: {
-                        color: 'white',
+                        color: 'black',
                       }
                     },
                     font: {
@@ -222,7 +235,7 @@ require(["esri/config",
                     ticks: {
                         maxRotation: 65,
                         minRotation: 65,
-                        color: 'white',
+                        color: 'black',
                         font: {
                           size: 15,
                         }
@@ -232,17 +245,12 @@ require(["esri/config",
                     } 
                   },
                   y: {
-                    ticks: {
-                      display: false
-                    },
-                    grid: {
-                      display:false
-                    } 
+                    display: false,
                   }
                 },
                 layout: {
                   padding: {
-                       top: 25
+                       top: 10
                   }
                 }
               }
@@ -295,13 +303,13 @@ require(["esri/config",
       const opacitySlider = document.getElementById("opacitySlider");
       const opacityLabel = document.getElementById("opacityLabel");
       Sentinel2.opacity = 0.75
-      opacityLabel.innerText = `Layer Opacity: 75%`;
+      opacityLabel.innerText = `Land Cover Opacity: 75%`;
 
       // Set up event listener for slider input changes
       opacitySlider.addEventListener("input", function (event) {
         const opacityValue = event.target.value;
         Sentinel2.opacity = opacityValue / 100;
-        opacityLabel.innerText = `Layer Opacity: ${opacityValue}%`;
+        opacityLabel.innerText = `Land Cover Opacity: ${opacityValue}%`;
       });
      
       // Add slider as expand
@@ -363,6 +371,7 @@ require(["esri/config",
                 geometry: feature.geometry,
                 symbol: polygonSymbol,
                 id: feature.attributes.HUC12,
+                name: feature.attributes.NAME,
                 length: feature.attributes.Shape__Length,
                 area: feature.attributes.Shape__Area
               }
