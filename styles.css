@@ -33,3 +33,46 @@ body,
   gap: 1px;
   grid-template-columns: repeat(3, 1fr);
 }
+
+
+.slider-container {
+  position: relative;
+  -bottom: 0;
+  -left: 0;
+  z-index: 99;
+  background-color: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+}
+
+#opacityLabel {
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+#customLegend {
+  padding: 1rem;
+}
+
+#sentinel2Leg{
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.legPair {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.legColor {
+  width: 1rem;
+  height: 1rem;
+  border: 0.1rem solid #c0c0c0;
+}
+
+.borderSVG {
+  width: 2rem
+}

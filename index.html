@@ -32,8 +32,15 @@
     <div class="chartDiv">
         <canvas id="histogramDiv"><canvas>
     </div>
-    <div class="legendContainer">
-        <div id="legend"><div>
+    <div id="customLegend">
+        <p>HUC 12 Subwatershed Boundaries</p>
+        <img src="assets/border.svg" class="borderSVG"/>
+        <p>Land Cover Classes</p>
+        <div id="sentinel2Leg"></div>
+    </div>
+    <div id="slider-container">
+        <div id="opacityLabel">Layer Opacity: 100%</div>
+        <input type="range" id="opacitySlider" min="0" max="100" value="50" step="1">
     </div>
 </body>
 </html>

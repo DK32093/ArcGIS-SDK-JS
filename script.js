@@ -17,7 +17,8 @@ require(["esri/config",
          "esri/rest/support/ImageHistogramParameters",
          "esri/widgets/Histogram",
          "esri/layers/support/LabelClass",
-         "esri/symbols/TextSymbol"], 
+         "esri/symbols/TextSymbol",
+         "esri/widgets/Expand"], 
   (esriConfig, 
    Map, 
    MapView, 
@@ -37,9 +38,10 @@ require(["esri/config",
    ImageHistogramParameters,
    Histogram,
    LabelClass,
-   TextSymbol) => { 
+   TextSymbol,
+   Expand) => { 
     const map = new Map({
-      basemap: "streets-night-vector"
+      basemap: "streets-vector"
     });
 
     const view = new MapView({
@@ -63,35 +65,36 @@ require(["esri/config",
     });
     map.add(Sentinel2);
 
+    const SentinelColors = [
+      'rgb(26, 91, 171)',
+      'rgb(53, 130, 33)',
+      'rgb(135, 209, 158)',
+      'rgb(255, 219, 92)',
+      'rgb(237, 2, 42)',
+      'rgb(237, 233, 228)',
+      'rgb(200, 200, 200)',
+      'rgb(242, 250, 255)',
+      'rgb(239, 207, 168)'
+    ]
+
+    const SentinelLabels = [
+      "Water", 
+      "Trees", 
+      "Flooded Veg.", 
+      "Crops", 
+      "Built Area", 
+      "Bare Ground", 
+      "Snow/Ice", 
+      "Clouds", 
+      "Rangeland"
+    ]
+    
     // Set time extent to 2023
     const timeExtent = {
       start: new Date(Date.UTC(2023, 0, 1)),
       end: new Date(Date.UTC(2023, 11, 31))
     };
     view.timeExtent = timeExtent;
-
-
-
-    const labelClass = new LabelClass({
-      symbol: new TextSymbol({
-        color: "white",
-        font: {
-          family: "Arial",
-          size: 10
-        }
-      }),
-      labelExpressionInfo: {
-        expression: "$feature.gaz_name" // Use the desired field for the label
-      },
-      labelPlacement: "above-center" // Adjust the placement as needed
-    });
-
-    const places = new FeatureLayer({
-      url: "https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/Geonames_Places_Points_v1/FeatureServer",
-      labelingInfo: [labelClass]
-    });
-    console.log(places)
-    map.add(places)
 
     const polygonSymbol = new SimpleFillSymbol({
       color: [0, 0, 0, 0],
@@ -173,21 +176,11 @@ require(["esri/config",
             new Chart(ctx, {
               type: 'bar',
               data: {
-                labels: ["Water", "Trees", "Flooded Veg.", "Crops", "Built Area", "Bare Ground", "Snow/Ice", "Clouds", "Rangeland"],
+                labels: SentinelLabels,
                 datasets: [{
                   data: (filteredData.map(number => (number / sum) * 100)),
                   borderWidth: 1,
-                  backgroundColor: [
-                    'rgb(26, 91, 171)',
-                    'rgb(53, 130, 33)',
-                    'rgb(135, 209, 158)',
-                    'rgb(255, 219, 92)',
-                    'rgb(237, 2, 42)',
-                    'rgb(237, 233, 228)',
-                    'rgb(200, 200, 200)',
-                    'rgb(242, 250, 255)',
-                    'rgb(239, 207, 168)'
-                  ]
+                  backgroundColor: SentinelColors
                 }]
               },
               options: {
@@ -250,7 +243,7 @@ require(["esri/config",
                 }
               }
             });
-            view.ui.add(histogramWidget, "top-right")
+            view.ui.add(histogramWidget, "bottom-right")
           });
         }
       })
@@ -267,17 +260,56 @@ require(["esri/config",
     //   }]
     // }
 
-    
-    
-       
+    const sentinel2Leg = document.getElementById("sentinel2Leg")
+    SentinelLabels.forEach((name, index) => {
+      const legPair = document.createElement("div")
+      legPair.classList.add("legPair"); 
+      const legColor = document.createElement("div")
+      legColor.classList.add("legColor"); 
+      const legLabel = document.createElement("div")
+      legLabel.classList.add("legLabel"); 
+      legColor.style.backgroundColor = SentinelColors[index]
+      legLabel.innerText = name
+      legPair.appendChild(legColor)
+      legPair.appendChild(legLabel)
+      sentinel2Leg.appendChild(legPair)
+    });
 
-      
-   
+    const customLegend = document.getElementById("customLegend")
+    const expand = new Expand({
+      view: view,
+      content: customLegend,
+      expandIconClass: "esri-icon-description", // Optional: Set a custom icon
+      expanded: true // Optional: Start collapsed
+    });
 
-  
-
+    view.ui.add(expand, "top-right")
 
     view.when().then(() => {
+      
+      // Set initial opacity and add slider
+      const opacitySlider = document.getElementById("opacitySlider");
+      const opacityLabel = document.getElementById("opacityLabel");
+      Sentinel2.opacity = 0.5
+      opacityLabel.innerText = `Layer Opacity: 50%`;
+
+      // Set up event listener for slider input changes
+      opacitySlider.addEventListener("input", function (event) {
+        const opacityValue = event.target.value;
+        Sentinel2.opacity = opacityValue / 100;
+        opacityLabel.innerText = `Layer Opacity: ${opacityValue}%`;
+      });
+     
+      // Add slider as expand
+      const slider = document.getElementById("slider-container");
+      const sliderExpand = new Expand({
+        view: view, // Pass your MapView instance here
+        content: slider,
+        expandIconClass: "esri-icon-description", // Optional: Set a custom icon
+        expanded: true // Optional: Start collapsed
+      });
+      view.ui.add(sliderExpand, "bottom-left")
+
       // Get HUC4 watersheds
       const WBD_HUC4 = new FeatureLayer({
         url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer?f=pjson"
@@ -286,15 +318,8 @@ require(["esri/config",
       // Get HUC12 watersheds
       const WBD_HUC12 = new FeatureLayer({
         url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer",
-        renderer: {
-          type: "simple",
-          symbol: polygonSymbol
-        }
       });
-      // Add to map to include in legend - but only the subset are visible as graphics
-      map.add(WBD_HUC12);
-      WBD_HUC12.visible = false;
-
+     
       // First query 
       const query = new Query();
       query.where = "HUC4 = '0109'";
@@ -341,53 +366,6 @@ require(["esri/config",
           view.graphics.addMany(geojson2);
         });
       });
-      // Legend
-      const mapLayer = map.layers.getItemAt(0); // Land cover
-      mapLayer.title = ""
-      const mapLayer2 = map.layers.getItemAt(1); // Watershed boundaries
-      const legend = new Legend({
-        view: view,
-        layerInfos: [
-          {
-            layer: mapLayer,
-            sublayers: [{ id: 1 }],
-            title: "2023 Land Cover Classes"
-          },
-          {
-            layer: mapLayer2,
-            title: "HUC 12 Watershed Boundaries"
-          }
-        ]
-      }, "legend"); // Add class
-      legend.respectLayerVisibility = false
-      view.ui.add(legend, "bottom-right");
-
-      // Remove No Data from legend after the widget redraws twice (once for each layer)
-      let i = 0;
-      function waitForCollectionLength(collection, targetLength, callback) {
-        const checkInterval = setInterval(() => {
-          if (collection.length === targetLength) {
-            i += 1;
-            if (i == 3) {
-              clearInterval(checkInterval);
-            } else {
-              callback();
-            }
-          }
-        }, 300) // Check every 100 milliseconds
-      }
-  
-      // The callback function to remove the No Data legend item (last child)
-      function removeNoDataFromLegend() {
-        const parentElement = document.getElementsByClassName("esri-legend__layer-body")
-        const Sentinel2Legend = parentElement[1];
-        if (Sentinel2Legend) {
-          const lastChild = Sentinel2Legend.lastElementChild;
-          lastChild.remove();
-        }
-      }
-        const parentElement = document.getElementsByClassName("esri-legend__layer-body")
-        waitForCollectionLength(parentElement, 2, removeNoDataFromLegend) 
     })
   }
 );
