@@ -7,7 +7,7 @@ body,
   width: 100%;
 }
 
-.chartDiv {
+#chartDiv {
   width: 30rem;
   background-color: none;
   border: 1px solid #ccc;
@@ -23,27 +23,10 @@ body,
   border-radius: 1rem;
 }
 
-#legend {
-  width: 30rem;
-  border-radius: 1rem;
-}
-
-.esri-legend__layer-body {
-  display: grid;
-  gap: 1px;
-  grid-template-columns: repeat(3, 1fr);
-}
-
-
-.slider-container {
-  position: relative;
-  -bottom: 0;
-  -left: 0;
-  z-index: 99;
+#slider-container {
   background-color: white;
-  padding: 10px;
-  border-radius: 5px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 1rem 0.5rem 1rem;
+  border-radius: 1rem;
 }
 
 #opacityLabel {

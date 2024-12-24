@@ -159,14 +159,18 @@ require(["esri/config",
             // Sum pixels in watershed
             const sum = result.histograms[0].counts.reduce((accumulator, current) => accumulator + current, 0);
 
-          
-            
             // Clear canvas for new chart
             let chartStatus = Chart.getChart("histogramDiv");
-            if (chartStatus != undefined) {
+            if (chartStatus !== undefined) {
               chartStatus.destroy();
+              const previousDiv = document.getElementById("histogramDiv");
+              previousDiv.remove()
             }
 
+            const chartDiv = document.getElementById("chartDiv");
+            const histogramDiv = document.createElement("canvas");
+            histogramDiv.id = "histogramDiv";
+            chartDiv.appendChild(histogramDiv)
             // Create chart
             const histogramWidget = new Histogram({
               container: "histogramDiv"
@@ -290,8 +294,8 @@ require(["esri/config",
       // Set initial opacity and add slider
       const opacitySlider = document.getElementById("opacitySlider");
       const opacityLabel = document.getElementById("opacityLabel");
-      Sentinel2.opacity = 0.5
-      opacityLabel.innerText = `Layer Opacity: 50%`;
+      Sentinel2.opacity = 0.75
+      opacityLabel.innerText = `Layer Opacity: 75%`;
 
       // Set up event listener for slider input changes
       opacitySlider.addEventListener("input", function (event) {
@@ -320,7 +324,7 @@ require(["esri/config",
         url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer",
       });
      
-      // First query 
+      // First query: get drainage subregion
       const query = new Query();
       query.where = "HUC4 = '0109'";
       query.outFields = ["*"];
@@ -332,7 +336,7 @@ require(["esri/config",
           return geom = feature.geometry
         });
         
-        // Second query
+        // Second query: get subwatersheds within subregion
         const query2 = new Query({
           geometry: geom,
           spatialRelationship: "intersects",
