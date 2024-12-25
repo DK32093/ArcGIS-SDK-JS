@@ -143,6 +143,7 @@ require(["esri/config",
         if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
           const clickedFeature = hitTestResult.results[0].graphic
           const watershedName = clickedFeature.name
+          const watershedArea = (clickedFeature.area/1000000).toFixed(2)
           let params = new ImageHistogramParameters({
             geometry:  clickedFeature.geometry,
           });
@@ -195,13 +196,12 @@ require(["esri/config",
                 plugins: {
                   title: {
                     display: true,
-                    text: watershedName,
+                    text: [watershedName, watershedArea + " km2"],
                     font: {
-                      size: 16,
-                      weight: 'bold'
+                      size: 20
                     },
                     padding: {
-                      bottom: 25 // Add 20px of space below the title
+                      bottom: 25 // Add space below the title
                     }
                   },
                   legend: {
