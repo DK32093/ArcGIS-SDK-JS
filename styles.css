@@ -9,9 +9,10 @@ body,
 
 #chartDiv {
   width: 30rem;
+  height: 20rem;
   background-color: none;
   border: 1px solid #ccc;
-  overflow: auto;
+  position: relative;
 }
 
 #chartInfo {
@@ -19,11 +20,13 @@ body,
 }
 
 #histogramDiv {
-  padding: 1rem 1rem 1rem 1rem;
-  width: 30rem;
-  height: 20rem;
+  padding: 0rem 1rem 1rem 1rem;
   background-color: #ffffff;
-  border-radius: 1rem;
+}
+
+#closeButton {
+  position: absolute;
+  margin: 0;
 }
 
 #slider-container {
@@ -44,6 +47,16 @@ body,
 
 #customLegend {
   padding: 1rem;
+}
+
+.legTitle {
+  display: flex;
+  justify-content: space-between;
+  
+}
+
+h2 {
+  margin: 0;
 }
 
 #sentinel2Leg{

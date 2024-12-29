@@ -122,6 +122,15 @@ require(["esri/config",
       }
     });
 
+    // Function for clearing chart
+    function destroyChart(chartStatus) {
+      chartStatus.destroy();
+      const previousDiv = document.getElementById("histogramDiv");
+      const previousClose = document.getElementById("closeButton");
+      previousDiv.remove()
+      previousClose.remove()
+    }
+
     // Highlight on hover logic
     let previousID;
     let previousGraphic;
@@ -172,22 +181,24 @@ require(["esri/config",
             const sum = result.histograms[0].counts.reduce((accumulator, current) => accumulator + current, 0);
 
             // Clear canvas for new chart
+           
             let chartStatus = Chart.getChart("histogramDiv");
             if (chartStatus !== undefined) {
-              chartStatus.destroy();
-              const previousDiv = document.getElementById("histogramDiv");
-              previousDiv.remove()
+              destroyChart(chartStatus)
             }
 
             // Create and append the new canvas
             const chartDiv = document.getElementById("chartDiv");
+            const closeButton = document.createElement("button"); // add event listener
+            closeButton.innerText = "X"
+            closeButton.id = "closeButton"
             const histogramDiv = document.createElement("canvas");
             histogramDiv.id = "histogramDiv";
-            chartDiv.appendChild(histogramDiv)
+            chartDiv.append(closeButton, histogramDiv)
 
             // Create new chart
             const histogramWidget = new Histogram({
-              container: "histogramDiv"
+              container: "chartDiv"
             });
 
             new Chart(histogramDiv, {
@@ -206,7 +217,7 @@ require(["esri/config",
                 plugins: {
                   title: {
                     display: true,
-                    text: [watershedName, watershedArea + " km2"],
+                    text: [watershedName, "Area: " + watershedArea + " km2"],
                     font: {
                       size: 20
                     },
@@ -325,22 +336,12 @@ require(["esri/config",
       // Add slider as expand
       const slider = document.getElementById("slider-container");
       const sliderExpand = new Expand({
-        view: view, // Pass your MapView instance here
+        view: view,
         content: slider,
         expandIconClass: "esri-icon-description", // Optional: Set a custom icon
-        expanded: true // Optional: Start collapsed
+        expanded: true
       });
       view.ui.add(sliderExpand, "bottom-left")
-
-      // Get HUC4 watersheds
-      const WBD_HUC4 = new FeatureLayer({
-        url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer?f=pjson"
-      });
-
-      // Get HUC12 watersheds
-      const WBD_HUC12 = new FeatureLayer({
-        url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer",
-      });
      
       // First query: get drainage subregion
       const query = new Query();
