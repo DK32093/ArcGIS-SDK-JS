@@ -96,6 +96,16 @@ require(["esri/config",
     };
     view.timeExtent = timeExtent;
 
+    // Get HUC4 watersheds
+    const WBD_HUC4 = new FeatureLayer({
+      url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer?f=pjson"
+    });
+
+    // Get HUC12 watersheds
+    const WBD_HUC12 = new FeatureLayer({
+      url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer",
+    });
+
     const polygonSymbol = new SimpleFillSymbol({
       color: [0, 0, 0, 0],
       outline: {
