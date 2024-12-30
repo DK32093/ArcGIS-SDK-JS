@@ -13,6 +13,7 @@ body,
   background-color: none;
   border: 1px solid #ccc;
   position: relative;
+  border-radius: 0.25rem;
 }
 
 #chartInfo {
@@ -22,11 +23,20 @@ body,
 #histogramDiv {
   padding: 0rem 1rem 1rem 1rem;
   background-color: #ffffff;
+  border-radius: 0.25rem;
 }
 
 #closeButton {
   position: absolute;
   margin: 0;
+  right: 0.25rem;
+  top: 0.25rem;
+  background: none;
+  color: #808080;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
 }
 
 #slider-container {
@@ -47,12 +57,6 @@ body,
 
 #customLegend {
   padding: 1rem;
-}
-
-.legTitle {
-  display: flex;
-  justify-content: space-between;
-  
 }
 
 h2 {

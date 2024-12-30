@@ -192,7 +192,6 @@ require(["esri/config",
             const chartDiv = document.createElement("div");
             chartDiv.id = "chartDiv"
             document.body.appendChild(chartDiv)
-            console.log(chartDiv)
             const closeButton = document.createElement("button");
             closeButton.innerText = "X"
             closeButton.id = "closeButton"
@@ -229,7 +228,8 @@ require(["esri/config",
                     display: true,
                     text: [watershedName, "Area: " + watershedArea + " km2"],
                     font: {
-                      size: 20
+                      size: 20,
+                      color: "black",
                     },
                     padding: {
                       bottom: 25 // Add space below the title
