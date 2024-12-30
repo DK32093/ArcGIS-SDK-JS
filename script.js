@@ -127,8 +127,10 @@ require(["esri/config",
       chartStatus.destroy();
       const previousDiv = document.getElementById("histogramDiv");
       const previousClose = document.getElementById("closeButton");
+      const previousChart = document.getElementById("chartDiv");
       previousDiv.remove()
       previousClose.remove()
+      previousChart.remove()
     }
 
     // Highlight on hover logic
@@ -181,20 +183,28 @@ require(["esri/config",
             const sum = result.histograms[0].counts.reduce((accumulator, current) => accumulator + current, 0);
 
             // Clear canvas for new chart
-           
             let chartStatus = Chart.getChart("histogramDiv");
             if (chartStatus !== undefined) {
               destroyChart(chartStatus)
             }
 
             // Create and append the new canvas
-            const chartDiv = document.getElementById("chartDiv");
-            const closeButton = document.createElement("button"); // add event listener
+            const chartDiv = document.createElement("div");
+            chartDiv.id = "chartDiv"
+            document.body.appendChild(chartDiv)
+            console.log(chartDiv)
+            const closeButton = document.createElement("button");
             closeButton.innerText = "X"
             closeButton.id = "closeButton"
             const histogramDiv = document.createElement("canvas");
             histogramDiv.id = "histogramDiv";
             chartDiv.append(closeButton, histogramDiv)
+
+            // Add event listener to close button
+            closeButton.addEventListener("click", function() {
+              let chartStatus = Chart.getChart("histogramDiv");
+              destroyChart(chartStatus)
+            })
 
             // Create new chart
             const histogramWidget = new Histogram({
@@ -365,7 +375,7 @@ require(["esri/config",
         
         WBD_HUC12.queryFeatures(query2).then((featureSet) => {
           const features2 = featureSet.features;
-          // Check watershed size to prevent request size limit errors 
+          // Check watershed size to prevent request-size-limit errors 
           features2.forEach((feature) => {
             const length = feature.attributes.Shape__Length
             const area = feature.attributes.Shape__Area
