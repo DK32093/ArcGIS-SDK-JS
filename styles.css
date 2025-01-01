@@ -11,15 +11,18 @@ button {
   cursor: pointer;
 }
 
-#welcomeContainer {
+#infoContainer {
   position: fixed;
+  display: flex;
   width: 75%;
-  max-width: 50rem;
-  height: 75%;
+  
   margin: 0;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(0%, -50%);
+  align-items: center;
+}
+
+#welcomeContainer {
   background-color: #1b1b4a;
   color: #ffffff;
   padding: 1rem;
@@ -27,9 +30,7 @@ button {
 }
 
 .infoButtonPair {
-  position: fixed;
-  top: 50%;
-  transform: translate(0% ,-50%);
+  height: 2.5rem;
   display: flex;
   margin-left: 1rem;
 }
