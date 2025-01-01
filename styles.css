@@ -15,7 +15,7 @@ button {
   position: fixed;
   display: flex;
   width: 75%;
-  
+  max-width: 50rem;
   margin: 0;
   top: 50%;
   transform: translate(0%, -50%);
@@ -27,6 +27,14 @@ button {
   color: #ffffff;
   padding: 1rem;
   border-radius: 0.25rem;
+}
+
+h1 {
+  line-height: 1rem;
+}
+
+#note {
+  font-size: 0.8rem;
 }
 
 .infoButtonPair {

@@ -48,7 +48,7 @@ require(["esri/config",
       container: "viewDiv",
       map: map,
       center: [-70.88045846458392, 42.03704144231204],
-      zoom: 7
+      zoom: 8
     });
 
     const Sentinel2 = new ImageryLayer({
