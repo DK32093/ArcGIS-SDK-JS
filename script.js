@@ -106,6 +106,7 @@ require(["esri/config",
       url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer",
     });
 
+    // Default HUC border style
     const polygonSymbol = new SimpleFillSymbol({
       color: [0, 0, 0, 0],
       outline: {
@@ -114,6 +115,7 @@ require(["esri/config",
       }
     });
 
+    // Highlight style
     const highlightSymbol = new SimpleFillSymbol({
       color: [0, 0, 255, 0.5],
       outline: {
@@ -132,6 +134,20 @@ require(["esri/config",
       previousClose.remove()
       previousChart.remove()
     }
+
+    // Info button: Remove and add welcome div on click
+    const infoButton = document.getElementById("infoButton");
+    const triangle = document.getElementById("triangle");
+    const welcomeContainer = document.getElementById("welcomeContainer");
+    infoButton.addEventListener("click", function() {
+      if (welcomeContainer.style.display === "none") {
+        welcomeContainer.style.display = "unset"
+        triangle.style.display = "unset"
+      } else {
+        welcomeContainer.style.display = "none"
+        triangle.style.display = "none"
+      }
+    });
 
     // Highlight on hover logic
     let previousID;
@@ -226,10 +242,10 @@ require(["esri/config",
                 plugins: {
                   title: {
                     display: true,
+                    color: "black",
                     text: [watershedName, "Area: " + watershedArea + " km2"],
                     font: {
                       size: 20,
-                      color: "black",
                     },
                     padding: {
                       bottom: 25 // Add space below the title
@@ -269,7 +285,7 @@ require(["esri/config",
                         color: 'black',
                         font: {
                           size: 15,
-                        }
+                        } 
                     },
                     grid: {
                       display:false
@@ -303,6 +319,7 @@ require(["esri/config",
     //   }]
     // }
 
+    // Create custom legend
     const sentinel2Leg = document.getElementById("sentinel2Leg")
     SentinelLabels.forEach((name, index) => {
       const legPair = document.createElement("div")
@@ -388,14 +405,14 @@ require(["esri/config",
             }
           })
           const geojson2 = features2.map((feature) => {
-              return {
-                geometry: feature.geometry,
-                symbol: polygonSymbol,
-                id: feature.attributes.HUC12,
-                name: feature.attributes.NAME,
-                length: feature.attributes.Shape__Length,
-                area: feature.attributes.Shape__Area
-              }
+            return {
+              geometry: feature.geometry,
+              symbol: polygonSymbol,
+              id: feature.attributes.HUC12,
+              name: feature.attributes.NAME,
+              length: feature.attributes.Shape__Length,
+              area: feature.attributes.Shape__Area
+            }
           })
           view.graphics.addMany(geojson2);
         });
