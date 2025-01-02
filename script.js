@@ -252,7 +252,7 @@ require(["esri/config",
                       size: 20,
                     },
                     padding: {
-                      bottom: 25 // Add space below the title
+                      bottom: 30 // Add space below the title
                     }
                   },
                   legend: {
@@ -312,17 +312,6 @@ require(["esri/config",
       })
     })
 
-
-    // reference
-    // scales: {
-    //   yAxes: [{
-    //     ticks: {
-    //       max : 100,    
-    //       min : 0
-    //     }
-    //   }]
-    // }
-
     // Create custom legend
     const sentinel2Leg = document.getElementById("sentinel2Leg")
     SentinelLabels.forEach((name, index) => {
@@ -369,7 +358,7 @@ require(["esri/config",
       const sliderExpand = new Expand({
         view: view,
         content: slider,
-        expandIconClass: "esri-icon-description", // Optional: Set a custom icon
+        expandIconClass: "esri-icon-description",
         expanded: true
       });
       view.ui.add(sliderExpand, "bottom-left")

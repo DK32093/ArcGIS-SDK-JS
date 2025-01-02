@@ -33,8 +33,33 @@ h1 {
   line-height: 1rem;
 }
 
+#intro {
+  padding-bottom: 1rem;
+}
+
 #note {
   font-size: 0.8rem;
+}
+
+.welcomeHeader {
+  line-height: 0.5rem;
+}
+
+a {
+  color: #ffffff;
+}
+
+#aboutMe {
+  display: flex;
+  align-items: center;
+}
+
+#headshotGroup {
+  text-align: center;
+}
+
+#headshot {
+  width: 10rem;
 }
 
 .infoButtonPair {

@@ -43,28 +43,42 @@
         </div>
         <div id="welcomeContainer">
             <h1>Welcome!</h1>
-            <h3>
+            <h3 id="intro">
                 This application shows the percentage of different land cover 
                 classes within subwatersheds around Boston, MA. Simply click on a watershed to 
                 get a summary! Click the <img src="assets/info.png" class="infoPNG welcomePNG"> button to get started.
             </h3>
-            <h3>About the Data</h3>
+            <h3 class="welcomeHeader">About the Data</h3>
             <div id="welcome">
-                Included all HUC 12 watersheds within the Massachusetts-Rhode Island Coastal Subregion*. 
-                Eaque sunt nobis consectetur odio sed facere, praesentium autem, 
-                accusantium nemo fuga obcaecati aliquam similique iusto expedita 
-                est? Nobis optio quo praesentium!
+                Hydrologic Unit Codes (HUCs) are used to identify areas of land that 
+                drain to a common outflow point (also known as watersheds). The US 
+                Geological Survey uses a 6-level nested system of HUCs. This application
+                includes all <a href="https://www.arcgis.com/home/item.html?id=b60aa1d756b245cf9db03a92254af878" 
+                target="_blank">HUC 12 subwatersheds</a> nested within the Massachusetts-Rhode 
+                Island Coastal Subregion.* The land cover data comes from the 
+                <a href="https://www.arcgis.com/home/item.html?id=cfcb7609de5f478eb7666240902d4d3d" 
+                target="_blank">ESA Sentinel-2 global LULC map</a> for the year 2023.
+                
                 <p id="note"><em>
                     *This application was developed using only a free ArcGIS Online account. 
                     Only watersheds that do not exceed the maximum area for requests were included.
                 </em></p>
             </div>
-            <h3>About Me</h3>
-            <div>
-                A creative and relentlessly curious geospatial analyst and application developer. 
-                Amet aperiam sapiente ipsum facilis perspiciatis excepturi 
-                recusandae nemo eaque eveniet commodi sed, iure enim? Et aspernatur 
-                consequuntur ullam quis delectus tempore?
+            <h3 class="welcomeHeader">About Me</h3>
+            <div id="aboutMe">
+                <div>
+                    A creative and relentlessly curious geospatial analyst and application developer. 
+                    Amet aperiam sapiente ipsum facilis perspiciatis excepturi 
+                    recusandae nemo eaque eveniet commodi sed, iure enim? Et aspernatur 
+                    consequuntur ullam quis delectus tempore?
+                </div>
+                <div id="headshotGroup">
+                    <img src="assets/Round_Headshot.png" id="headshot">
+                    <div>
+                        <a href="https://www.linkedin.com/in/dylanrk93/" target="_blank">LinkedIn</a> | 
+                        <a href="https://github.com/DK32093" target="_blank">GitHub</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
