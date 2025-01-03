@@ -47,21 +47,16 @@ require(["esri/config",
     const view = new MapView({
       container: "viewDiv",
       map: map,
-      center: [-70.88045846458392, 42.03704144231204],
-      zoom: 8
+      center: [-70.98499306059419, 42.156377043463085],
+      zoom: 8,
+      constraints: {
+        minZoom: 8
+      }
     });
 
     const Sentinel2 = new ImageryLayer({
       url: "https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer",
       format: "jpgpng",
-     
-
-      // rasterFunction: new RasterFunction({
-      //   functionName: "YearFilter", // Example function name
-      //   functionArguments: {
-      //     Year: 2022
-      //   }
-      // })
     });
     map.add(Sentinel2);
 
@@ -89,23 +84,24 @@ require(["esri/config",
       "Rangeland"
     ]
     
-    // Set time extent to 2023
+    // Set land cover time extent to 2023
     const timeExtent = {
       start: new Date(Date.UTC(2023, 0, 1)),
       end: new Date(Date.UTC(2023, 11, 31))
     };
     view.timeExtent = timeExtent;
 
-    // Get HUC4 watersheds
+    // Get HUC 4 watersheds
     const WBD_HUC4 = new FeatureLayer({
       url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer?f=pjson"
     });
     map.add(WBD_HUC4)
     WBD_HUC4.visible = false
 
-    // Get HUC12 watersheds
+    // Get HUC 12 watersheds
     const WBD_HUC12 = new FeatureLayer({
       url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer",
+      simplify: true
     });
     map.add(WBD_HUC12)
     WBD_HUC12.visible = false
@@ -128,6 +124,15 @@ require(["esri/config",
       }
     });
 
+    // Current chart area
+    const chartHighlight = new SimpleFillSymbol({
+      color: [255, 255, 255, 0.5],
+      outline: {
+        color: [255, 255, 255],
+        width: 2
+      }
+    });
+
     // Function for clearing chart
     function destroyChart(chartStatus) {
       chartStatus.destroy();
@@ -137,6 +142,13 @@ require(["esri/config",
       previousDiv.remove()
       previousClose.remove()
       previousChart.remove()
+    }
+
+    // Function for removing empty classes from charts
+    function filterHist(array, ranges) {
+      return array.filter((_, index) => {
+        return ranges.some(([start, end]) => index >= start && index <= end);
+      });
     }
 
     // Info button: Remove and add welcome div on click
@@ -168,7 +180,9 @@ require(["esri/config",
                   previousGraphic.symbol = polygonSymbol
                 }
               }
-              graphic.symbol = highlightSymbol;
+              if (graphic.symbol !== chartHighlight) {
+                graphic.symbol = highlightSymbol;
+              }
               previousID = HUC_ID
               previousGraphic = graphic
             }
@@ -178,25 +192,30 @@ require(["esri/config",
     });
 
     // Generate chart on click
+    let previousFeature;
     Chart.register(ChartDataLabels);
     view.on("click", (event) => {
       view.hitTest(event).then((hitTestResult) => {
         if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
           const clickedFeature = hitTestResult.results[0].graphic
+          clickedFeature.symbol = chartHighlight
+          if (previousFeature) {
+            if (previousFeature !== clickedFeature) {
+              previousFeature.symbol = polygonSymbol
+            }
+          }
+          previousFeature = clickedFeature
+          const clickedGeom = clickedFeature.geometry
           const watershedName = clickedFeature.name
           const watershedArea = (clickedFeature.area/1000000).toFixed(2)
           let params = new ImageHistogramParameters({
-            geometry:  clickedFeature.geometry,
+            geometry:  clickedGeom,
           });
+          view.goTo(clickedGeom)
           Sentinel2.computeHistograms(params).then((result) => {
             // Filter out empty classes
             const allCounts = result.histograms[0].counts
             const ranges = [[1,2], [4,5], [7,11]]
-            function filterHist(array, ranges) {
-              return array.filter((_, index) => {
-                return ranges.some(([start, end]) => index >= start && index <= end);
-              });
-            }
             const filteredData = filterHist(allCounts, ranges);
             
             // Sum pixels in watershed
@@ -223,6 +242,7 @@ require(["esri/config",
             closeButton.addEventListener("click", function() {
               let chartStatus = Chart.getChart("histogramDiv");
               destroyChart(chartStatus)
+              previousFeature.symbol = polygonSymbol
             })
 
             // Create new chart
