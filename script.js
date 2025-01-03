@@ -197,7 +197,12 @@ require(["esri/config",
     view.on("click", (event) => {
       view.hitTest(event).then((hitTestResult) => {
         if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
+          // Close legend expand
+          if (expand.expanded = true) {
+            expand.expanded = false
+          }
           const clickedFeature = hitTestResult.results[0].graphic
+          // Highlight clicked feature and reset previous feature
           clickedFeature.symbol = chartHighlight
           if (previousFeature) {
             if (previousFeature !== clickedFeature) {
@@ -211,7 +216,7 @@ require(["esri/config",
           let params = new ImageHistogramParameters({
             geometry:  clickedGeom,
           });
-          view.goTo(clickedGeom)
+          view.goTo({geometry: clickedGeom, zoom: 10})
           Sentinel2.computeHistograms(params).then((result) => {
             // Filter out empty classes
             const allCounts = result.histograms[0].counts
@@ -352,8 +357,8 @@ require(["esri/config",
     const expand = new Expand({
       view: view,
       content: customLegend,
-      expandIconClass: "esri-icon-description", // Optional: Set a custom icon
-      expanded: true // Optional: Start collapsed
+      expandIconClass: "esri-icon-description",
+      expanded: true
     });
 
     view.ui.add(expand, "top-right")

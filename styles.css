@@ -95,9 +95,10 @@ a {
 }
 
 #chartDiv {
-  width: 30rem;
-  height: 20rem;
-  background-color: none;
+  width: 50vw;
+  max-width: 30rem;
+  min-width: 20rem;
+  height: 40vh;
   border: 1px solid #ccc;
   position: relative;
   border-radius: 0.25rem;
@@ -110,7 +111,6 @@ a {
 
 #histogramDiv {
   padding: 0rem 1rem 1rem 1rem;
-  background-color: #ffffff;
   border-radius: 0.25rem;
 }
 
