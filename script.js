@@ -18,7 +18,8 @@ require(["esri/config",
          "esri/widgets/Histogram",
          "esri/layers/support/LabelClass",
          "esri/symbols/TextSymbol",
-         "esri/widgets/Expand"], 
+         "esri/widgets/Expand",
+         "esri/core/promiseUtils"], 
   (esriConfig, 
    Map, 
    MapView, 
@@ -39,7 +40,8 @@ require(["esri/config",
    Histogram,
    LabelClass,
    TextSymbol,
-   Expand) => { 
+   Expand,
+   promiseUtils) => { 
     const map = new Map({
       basemap: "streets-vector"
     });
@@ -64,11 +66,11 @@ require(["esri/config",
       welcomeContainer.style.minWidth = "0"
       welcomeContainer.style.minHeight = "0"
       welcomeContainer.style.width = "90vw"
-      welcomeContainer.style.height = "90vh"
+      welcomeContainer.style.height = "80vh"
       welcomeContainer.style.transform = "translate(-25%, 0%)"
       // Change intro text
       const intro = document.getElementById("intro")
-      intro.innerText = "This application shows the percentage of different land cover classes within subwatersheds around Boston, MA in 2023. Simply click on a watershed to get a summary! Close this window to get started."
+      intro.innerText = "This application shows the percentage of different land cover classes within subwatersheds around Boston, MA in 2023. Simply tap on a watershed to get a summary! Close this window to get started."
       // Add close button
       const mobileCloseButton = document.createElement("button");
       mobileCloseButton.innerText = "X"
@@ -451,30 +453,32 @@ require(["esri/config",
             view.whenLayerView(WBD_HUC12).then((layerView) => {
               reactiveUtils.whenOnce(() => !layerView.updating).then(() => {
                 WBD_HUC12.queryFeatures(query2).then((featureSet) => {
-                  const features2 = featureSet.features;
-                  // Check watershed size to prevent request-size-limit errors 
-                  features2.forEach((feature) => {
-                    const length = feature.attributes.Shape__Length
-                    const area = feature.attributes.Shape__Area
-                    if (length > 130000 || area > 320000000) {
-                      const id = feature.attributes.HUC12
-                      const index = features2.findIndex(feature => {
-                        return feature.attributes.HUC12 === id;
-                      });
-                      features2.splice(index, 1);
-                    }
+                  promiseUtils.when(featureSet).then((readyFeatures) => {
+                    const features2 = readyFeatures.features;
+                    // Check watershed size to prevent request-size-limit errors 
+                    features2.forEach((feature) => {
+                      const length = feature.attributes.Shape__Length
+                      const area = feature.attributes.Shape__Area
+                      if (length > 130000 || area > 320000000) {
+                        const id = feature.attributes.HUC12
+                        const index = features2.findIndex(feature => {
+                          return feature.attributes.HUC12 === id;
+                        });
+                        features2.splice(index, 1);
+                      }
+                    })
+                    const geojson2 = features2.map((feature) => {
+                      return {
+                        geometry: feature.geometry,
+                        symbol: polygonSymbol,
+                        id: feature.attributes.HUC12,
+                        name: feature.attributes.NAME,
+                        length: feature.attributes.Shape__Length,
+                        area: feature.attributes.Shape__Area
+                      }
+                    })
+                    view.graphics.addMany(geojson2);
                   })
-                  const geojson2 = features2.map((feature) => {
-                    return {
-                      geometry: feature.geometry,
-                      symbol: polygonSymbol,
-                      id: feature.attributes.HUC12,
-                      name: feature.attributes.NAME,
-                      length: feature.attributes.Shape__Length,
-                      area: feature.attributes.Shape__Area
-                    }
-                  })
-                  view.graphics.addMany(geojson2);
                 });
               });
             });
