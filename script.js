@@ -56,6 +56,7 @@ require(["esri/config",
       }
     });
 
+    // Mobile settings
     if (window.innerWidth < 500) {
       // Change flex display 
       const aboutMe = document.getElementById("aboutMe");
@@ -193,7 +194,6 @@ require(["esri/config",
         }
       });
     })
-
 
     // Highlight on hover logic
     let previousID;
