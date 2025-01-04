@@ -197,26 +197,28 @@ require(["esri/config",
     let previousID;
     let previousGraphic;
     view.graphics.watch("length", () => {
-      view.on("pointer-move", (event) => {
-        view.hitTest(event).then((hitTestResult) => {
-          if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
-            const graphic = hitTestResult.results[0].graphic;
-            HUC_ID = graphic.id 
-            if(previousID !== HUC_ID){
-              if (previousGraphic) {
-                if (previousGraphic.symbol === highlightSymbol){
-                  previousGraphic.symbol = polygonSymbol
+      if (window.innerWidth > 500) {
+        view.on("pointer-move", (event) => {
+          view.hitTest(event).then((hitTestResult) => {
+            if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
+              const graphic = hitTestResult.results[0].graphic;
+              HUC_ID = graphic.id 
+              if(previousID !== HUC_ID){
+                if (previousGraphic) {
+                  if (previousGraphic.symbol === highlightSymbol){
+                    previousGraphic.symbol = polygonSymbol
+                  }
                 }
+                if (graphic.symbol !== chartHighlight) {
+                  graphic.symbol = highlightSymbol;
+                }
+                previousID = HUC_ID
+                previousGraphic = graphic
               }
-              if (graphic.symbol !== chartHighlight) {
-                graphic.symbol = highlightSymbol;
-              }
-              previousID = HUC_ID
-              previousGraphic = graphic
             }
-          }
+          })
         })
-      })
+      }
     });
 
     // Generate chart on click
