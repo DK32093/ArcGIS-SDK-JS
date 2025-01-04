@@ -14,7 +14,7 @@ button {
 #infoContainer {
   position: fixed;
   display: flex;
-  width: 75%;
+  width: 75vw;
   max-width: 50rem;
   min-width: 40rem;
   max-height: 50rem;
@@ -29,6 +29,17 @@ button {
   color: #ffffff;
   padding: 1rem;
   border-radius: 0.25rem;
+}
+
+#mobileCloseButton {
+  position: absolute;
+  margin: 0;
+  right: 1rem;
+  top: 1rem;
+  background: none;
+  color: #ffffff;
+  font-size: 2rem;
+  border: none;
 }
 
 h1 {

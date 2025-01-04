@@ -54,6 +54,26 @@ require(["esri/config",
       }
     });
 
+    if (window.innerWidth < 500) {
+      const triangle = document.getElementById("triangle")
+      //triangle.remove()
+      const aboutMe = document.getElementById("aboutMe");
+      aboutMe.style.display = "block"
+      const welcomeContainer = document.getElementById("welcomeContainer");
+      welcomeContainer.style.overflow = "scroll"
+      welcomeContainer.style.minWidth = "0"
+      welcomeContainer.style.minHeight = "0"
+      welcomeContainer.style.width = "90vw"
+      welcomeContainer.style.height = "90vh"
+      welcomeContainer.style.transform = "translate(-25%, 0%)"
+      // Add close button
+      const mobileCloseButton = document.createElement("button");
+      mobileCloseButton.innerText = "X"
+      mobileCloseButton.id = "mobileCloseButton"
+      mobileCloseButton.classList.add("close")
+      welcomeContainer.append(mobileCloseButton)
+    }
+
     const Sentinel2 = new ImageryLayer({
       url: "https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer",
       format: "jpgpng",
@@ -153,17 +173,22 @@ require(["esri/config",
 
     // Info button: Remove and add welcome div on click
     const infoButton = document.getElementById("infoButton");
+    infoButton.classList.add("close")
     const triangle = document.getElementById("triangle");
     const welcomeContainer = document.getElementById("welcomeContainer");
-    infoButton.addEventListener("click", function() {
-      if (welcomeContainer.style.display === "none") {
-        welcomeContainer.style.display = "unset"
-        triangle.style.display = "unset"
-      } else {
-        welcomeContainer.style.display = "none"
-        triangle.style.display = "none"
-      }
-    });
+    const closeButtons = document.querySelectorAll(".close")
+    closeButtons.forEach(button => {
+      button.addEventListener("click", function() {
+        if (welcomeContainer.style.display === "none") {
+          welcomeContainer.style.display = "unset"
+          triangle.style.display = "unset"
+        } else {
+          welcomeContainer.style.display = "none"
+          triangle.style.display = "none"
+        }
+      });
+    })
+
 
     // Highlight on hover logic
     let previousID;
@@ -387,6 +412,11 @@ require(["esri/config",
         expanded: true
       });
       view.ui.add(sliderExpand, "bottom-left")
+
+      if (window.innerWidth < 500) {
+        expand.expanded = false
+        sliderExpand.expanded = false
+      }
      
       // First query: get drainage subregion
       const query = new Query();
