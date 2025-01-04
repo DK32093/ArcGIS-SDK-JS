@@ -276,7 +276,7 @@ require(["esri/config",
             chartDiv.append(closeButton, histogramDiv)
 
             // Add event listener to close button
-            closeButton.addEventListener("click", function() {
+            closeButton.addEventListener("mouseup", function() {
               let chartStatus = Chart.getChart("histogramDiv");
               destroyChart(chartStatus)
               previousFeature.symbol = polygonSymbol
