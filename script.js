@@ -55,10 +55,10 @@ require(["esri/config",
     });
 
     if (window.innerWidth < 500) {
-      const triangle = document.getElementById("triangle")
-      //triangle.remove()
+      // Change flex display 
       const aboutMe = document.getElementById("aboutMe");
       aboutMe.style.display = "block"
+      // Update welcome card layout
       const welcomeContainer = document.getElementById("welcomeContainer");
       welcomeContainer.style.overflow = "scroll"
       welcomeContainer.style.minWidth = "0"
@@ -66,6 +66,9 @@ require(["esri/config",
       welcomeContainer.style.width = "90vw"
       welcomeContainer.style.height = "90vh"
       welcomeContainer.style.transform = "translate(-25%, 0%)"
+      // Change intro text
+      const intro = document.getElementById("intro")
+      intro.innerText = "This application shows the percentage of different land cover classes within subwatersheds around Boston, MA in 2023. Simply click on a watershed to get a summary! Close this window to get started."
       // Add close button
       const mobileCloseButton = document.createElement("button");
       mobileCloseButton.innerText = "X"
@@ -327,7 +330,7 @@ require(["esri/config",
                     },
                     font: {
                       weight: 'bold',
-                      size: 16,
+                      size: 13,
                     }
                   }
                 },
@@ -413,6 +416,7 @@ require(["esri/config",
       });
       view.ui.add(sliderExpand, "bottom-left")
 
+      // Close expands on mobile
       if (window.innerWidth < 500) {
         expand.expanded = false
         sliderExpand.expanded = false
