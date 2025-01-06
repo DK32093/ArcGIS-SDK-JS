@@ -275,6 +275,11 @@ require(["esri/config",
             histogramDiv.id = "histogramDiv";
             chartDiv.append(closeButton, histogramDiv)
 
+            //Adjust chart height for wide screens
+            if (window.innerHeight < 600) {
+              chartDiv.style.height = "75vh"
+            }
+
             // Add event listener to close button
             closeButton.addEventListener("mouseup", function() {
               let chartStatus = Chart.getChart("histogramDiv");
