@@ -78,7 +78,7 @@ require(["esri/config",
       welcomeContainer.style.minHeight = "0"
       welcomeContainer.style.width = "90vw"
       welcomeContainer.style.height = "80vh"
-      welcomeContainer.style.transform = "translate(-25%, 0%)"
+      welcomeContainer.style.transform = "translate(-14%, 0%)"
       // Change intro text
       const intro = document.getElementById("intro")
       intro.innerText = "This application shows the percentage of different land cover classes within subwatersheds around Boston, MA in 2023. Simply tap on a watershed to get a summary! Close this window to get started."
@@ -172,7 +172,7 @@ require(["esri/config",
       const previousClose = document.getElementById("closeButton");
       const previousChart = document.getElementById("chartDiv");
       previousDiv.remove()
-      previousClose.remove()
+      //previousClose.remove()
       previousChart.remove()
     }
 
@@ -186,7 +186,6 @@ require(["esri/config",
     // Info button: Remove and add welcome div on click
     const infoButton = document.getElementById("infoButton");
     infoButton.classList.add("close")
-    //const triangle = document.getElementById("triangle");
     const welcomeContainer = document.getElementById("welcomeContainer");
     const closeButtons = document.querySelectorAll(".close")
     closeButtons.forEach(button => {
@@ -209,7 +208,7 @@ require(["esri/config",
     let previousID;
     let previousGraphic;
     view.graphics.watch("length", () => {
-      if (window.innerWidth > 500) {
+      if (window.innerWidth > 500) { // not on mobile
         view.on("pointer-move", (event) => {
           view.hitTest(event).then((hitTestResult) => {
             if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
@@ -260,7 +259,7 @@ require(["esri/config",
           });
           view.goTo({geometry: clickedGeom, zoom: 10})
           Sentinel2.computeHistograms(params).then((result) => {
-            // Filter out empty classes
+            // Filter out empty and uneeded classes
             const allCounts = result.histograms[0].counts
             const ranges = [[1,2], [4,5], [7,11]]
             const filteredData = filterHist(allCounts, ranges);
@@ -285,9 +284,40 @@ require(["esri/config",
             histogramDiv.id = "histogramDiv";
             chartDiv.append(closeButton, histogramDiv)
 
-            //Adjust chart height for wide screens
+            // Adjust chart height for wide screens
             if (window.innerHeight < 600) {
               chartDiv.style.height = "70vh"
+            }
+
+            // Add expanded chart view option for desktop
+            if (mobile === "f") {
+              const expandChartButton = document.createElement("button");
+              expandChartButton.innerText = "+"
+              expandChartButton.id = "expandChartButton"
+              chartDiv.append(expandChartButton)
+
+              //listener
+              expandChartButton.addEventListener("click", function() {
+                expandChartButton.remove()
+                chartDiv.style.maxWidth = "none"
+                chartDiv.style.width = "100vw"
+                chartDiv.style.height = "90vh"
+                const minChartButton = document.createElement("button");
+                minChartButton.innerText = "-"
+                minChartButton.id = "minChartButton"
+                chartDiv.append(minChartButton)
+                minChartButton.addEventListener("click", function() {
+                  chartDiv.style.maxWidth = "30rem"
+                  chartDiv.style.width = "50vw"
+                  if (window.innerHeight < 600) {
+                    chartDiv.style.height = "70vh"
+                  } else {
+                    chartDiv.style.height = "40vh"
+                  }
+                  minChartButton.remove()
+                  chartDiv.append(expandChartButton)
+                })
+              })
             }
 
             // Add event listener to close button

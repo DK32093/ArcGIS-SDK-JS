@@ -80,10 +80,11 @@ a {
 .infoButtonPair {
   height: 2.5rem;
   display: flex;
-  margin-left: 1rem;
+  
 }
 
 #infoButton {
+  margin-left: 1rem;
   font-size: 1rem;
   background-color: #1b1b4a;
   border: none;
@@ -115,6 +116,7 @@ a {
   position: relative;
   border-radius: 0.25rem;
   background-color: #ffffff;
+  z-index: 10000;
 }
 
 #chartInfo {
@@ -136,6 +138,30 @@ a {
   background: none;
   color: #808080;
   font-size: 1rem;
+  font-weight: 600;
+  border: none;
+}
+
+#expandChartButton {
+  position: absolute;
+  margin: 0;
+  Left: 0.25rem;
+  top: 0.25rem;
+  background: none;
+  color: #808080;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border: none;
+}
+
+#minChartButton {
+  position: absolute;
+  margin: 0;
+  Left: 0.25rem;
+  top: 0.25rem;
+  background: #ffffff;
+  color: #808080;
+  font-size: 1.5rem;
   font-weight: 600;
   border: none;
 }
