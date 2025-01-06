@@ -58,11 +58,13 @@ require(["esri/config",
       }
     });
 
+    const scaleBarContainer = document.getElementById("scaleBarContainer")
     const scaleBar = new ScaleBar({
-      view: view
+      view: view,
+      container: scaleBarContainer
     });
     
-    view.ui.add(scaleBar, "bottom-left");
+    view.ui.add(scaleBar, "bottom-right");
 
     // Mobile settings
     let mobile = "f"

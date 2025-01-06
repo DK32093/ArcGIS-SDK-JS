@@ -7,10 +7,21 @@ body,
   width: 100%;
 }
 
-
-
 button {
   cursor: pointer;
+}
+
+#scaleBarContainer {
+  position: fixed;
+  right: 80%;
+  top: 3%;
+  transform: translate(0%, -65%);
+}
+
+
+
+.esri-scale-bar__ticks {
+  border: 2px solid #ffffff;
 }
 
 #infoContainer {
