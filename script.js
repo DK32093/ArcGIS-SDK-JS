@@ -121,16 +121,12 @@ require(["esri/config",
     const WBD_HUC4 = new FeatureLayer({
       url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer?f=pjson"
     });
-    map.add(WBD_HUC4)
-    WBD_HUC4.visible = false
 
     // Get HUC 12 watersheds
     const WBD_HUC12 = new FeatureLayer({
       url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer",
       simplify: true
     });
-    map.add(WBD_HUC12)
-    WBD_HUC12.visible = false
 
     // Default HUC border style
     const polygonSymbol = new SimpleFillSymbol({
@@ -437,57 +433,49 @@ require(["esri/config",
       query.outFields = ["*"];
       query.returnGeometry = true; 
 
-      // Wait for subregions to load before executing query
-      view.whenLayerView(WBD_HUC4).then((layerView) => {
-        reactiveUtils.whenOnce(() => !layerView.updating).then(() => {
-          WBD_HUC4.queryFeatures(query).then((featureSet) => {
-            const features = featureSet.features; 
-            features.map((feature) => {
-              return geom = feature.geometry
-            });
-            
-            // Second query: get subwatersheds within subregion
-            const query2 = new Query({
-              geometry: geom,
-              spatialRelationship: "intersects",
-              returnGeometry: true,
-              outFields: ["*"]
-            });
-            
-            // Wait for subwatersheds to load before executing query
-            view.whenLayerView(WBD_HUC12).then((layerView) => {
-              reactiveUtils.whenOnce(() => !layerView.updating).then(() => {
-                WBD_HUC12.queryFeatures(query2).then((featureSet) => {
-                  promiseUtils.when(featureSet).then((readyFeatures) => {
-                    const features2 = readyFeatures.features;
-                    // Check watershed size to prevent request-size-limit errors 
-                    for (feature of features2) {
-                      const length = feature.attributes.Shape__Length
-                      const area = feature.attributes.Shape__Area
-                      if (length > 130000 || area > 320000000) {
-                        const id = feature.attributes.HUC12
-                        const index = features2.findIndex(feature => {
-                          return feature.attributes.HUC12 === id;
-                        });
-                        features2.splice(index, 1);
-                      }
-                    }
-                    const geojson2 = features2.map((feature) => {
-                      return {
-                        geometry: feature.geometry,
-                        symbol: polygonSymbol,
-                        id: feature.attributes.HUC12,
-                        name: feature.attributes.NAME,
-                        length: feature.attributes.Shape__Length,
-                        area: feature.attributes.Shape__Area
-                      }
-                    })
-                    view.graphics.addMany(geojson2);
-                  })
+      // Execute first query
+      WBD_HUC4.queryFeatures(query).then((featureSet) => {
+        const features = featureSet.features; 
+        features.map((feature) => {
+          return geom = feature.geometry
+        });
+        
+        // Second query: get subwatersheds within subregion
+        const query2 = new Query({
+          geometry: geom,
+          spatialRelationship: "intersects",
+          returnGeometry: true,
+          outFields: ["*"]
+        });
+        
+        // Execute second query
+        WBD_HUC12.queryFeatures(query2).then((featureSet) => {
+          promiseUtils.when(featureSet).then((readyFeatures) => {
+            const features2 = readyFeatures.features;
+            // Check watershed size to prevent request-size-limit errors 
+            for (feature of features2) {
+              const length = feature.attributes.Shape__Length
+              const area = feature.attributes.Shape__Area
+              if (length > 130000 || area > 320000000) {
+                const id = feature.attributes.HUC12
+                const index = features2.findIndex(feature => {
+                  return feature.attributes.HUC12 === id;
                 });
-              });
-            });
-          });
+                features2.splice(index, 1);
+              }
+            }
+            const geojson2 = features2.map((feature) => {
+              return {
+                geometry: feature.geometry,
+                symbol: polygonSymbol,
+                id: feature.attributes.HUC12,
+                name: feature.attributes.NAME,
+                length: feature.attributes.Shape__Length,
+                area: feature.attributes.Shape__Area
+              }
+            })
+            view.graphics.addMany(geojson2);
+          })
         });
       });
     })
