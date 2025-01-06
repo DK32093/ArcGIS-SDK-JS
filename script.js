@@ -70,6 +70,8 @@ require(["esri/config",
     let mobile = "f"
     if (window.innerWidth < 500) {
       mobile = "t"
+      scaleBarContainer.style.right = "30%"
+      scaleBarContainer.style.transform = "translate(-30%, 0%)"
       // Change flex display 
       const aboutMe = document.getElementById("aboutMe");
       aboutMe.style.display = "block"
