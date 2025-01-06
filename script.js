@@ -456,7 +456,7 @@ require(["esri/config",
                   promiseUtils.when(featureSet).then((readyFeatures) => {
                     const features2 = readyFeatures.features;
                     // Check watershed size to prevent request-size-limit errors 
-                    features2.forEach((feature) => {
+                    for (feature of features2) {
                       const length = feature.attributes.Shape__Length
                       const area = feature.attributes.Shape__Area
                       if (length > 130000 || area > 320000000) {
@@ -466,7 +466,7 @@ require(["esri/config",
                         });
                         features2.splice(index, 1);
                       }
-                    })
+                    }
                     const geojson2 = features2.map((feature) => {
                       return {
                         geometry: feature.geometry,
