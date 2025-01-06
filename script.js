@@ -142,7 +142,7 @@ require(["esri/config",
     const highlightSymbol = new SimpleFillSymbol({
       color: [0, 0, 255, 0.5],
       outline: {
-        color: [0, 0, 255],
+        color: [0, 0, 0],
         width: 2
       }
     });
