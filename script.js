@@ -56,17 +56,8 @@ require(["esri/config",
       }
     });
 
-    // Desktop settings
-    let mobile = "f"
-    if (window.innerWidth >= 500) {
-      const infoButtonPair = document.getElementById("infoButtonPair")
-      const triangle = document.createElement("img")
-      triangle.src = "assets/triangle.svg"
-      triangle.id = "triangle"
-      infoButtonPair.appendChild(triangle)
-    }
-
     // Mobile settings
+    let mobile = "f"
     if (window.innerWidth < 500) {
       mobile = "t"
       // Change flex display 
@@ -78,7 +69,7 @@ require(["esri/config",
       welcomeContainer.style.minHeight = "0"
       welcomeContainer.style.width = "90vw"
       welcomeContainer.style.height = "80vh"
-      welcomeContainer.style.transform = "translate(-14%, 0%)"
+      welcomeContainer.style.transform = "translate(-25%, 0%)"
       // Change intro text
       const intro = document.getElementById("intro")
       intro.innerText = "This application shows the percentage of different land cover classes within subwatersheds around Boston, MA in 2023. Simply tap on a watershed to get a summary! Close this window to get started."
@@ -169,10 +160,8 @@ require(["esri/config",
     function destroyChart(chartStatus) {
       chartStatus.destroy();
       const previousDiv = document.getElementById("histogramDiv");
-      const previousClose = document.getElementById("closeButton");
       const previousChart = document.getElementById("chartDiv");
       previousDiv.remove()
-      //previousClose.remove()
       previousChart.remove()
     }
 
@@ -186,20 +175,17 @@ require(["esri/config",
     // Info button: Remove and add welcome div on click
     const infoButton = document.getElementById("infoButton");
     infoButton.classList.add("close")
+    const triangle = document.getElementById("triangle")
     const welcomeContainer = document.getElementById("welcomeContainer");
     const closeButtons = document.querySelectorAll(".close")
     closeButtons.forEach(button => {
       button.addEventListener("click", function() {
         if (welcomeContainer.style.display === "none") {
           welcomeContainer.style.display = "unset"
-          if (mobile === "f") {
-            triangle.style.display = "unset"
-          }
+          triangle.style.display = "unset"
         } else {
           welcomeContainer.style.display = "none"
-          if (mobile === "f") {
-            triangle.style.display = "none"
-          }
+          triangle.style.display = "none"
         }
       });
     })
@@ -351,7 +337,7 @@ require(["esri/config",
                     color: "black",
                     text: [watershedName, "Area: " + watershedArea + " km2"],
                     font: {
-                      size: 20,
+                      size: 18,
                     },
                     padding: {
                       bottom: 30 // Add space below the title
