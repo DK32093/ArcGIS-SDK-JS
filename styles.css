@@ -15,7 +15,6 @@ button {
   position: fixed;
   display: flex;
   width: auto;
-  
   top: 50%;
   transform: translate(0%, -50%);
   align-items: center;

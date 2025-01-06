@@ -63,7 +63,6 @@ require(["esri/config",
       aboutMe.style.display = "block"
       // Update welcome card layout
       const welcomeContainer = document.getElementById("welcomeContainer");
-      welcomeContainer.style.overflow = "scroll"
       welcomeContainer.style.minWidth = "0"
       welcomeContainer.style.minHeight = "0"
       welcomeContainer.style.width = "90vw"
@@ -148,9 +147,9 @@ require(["esri/config",
 
     // Current chart area
     const chartHighlight = new SimpleFillSymbol({
-      color: [255, 255, 255, 0.5],
+      color: [255, 255, 0, 0.5],
       outline: {
-        color: [255, 255, 255],
+        color: [0, 0, 0],
         width: 2
       }
     });
@@ -224,7 +223,7 @@ require(["esri/config",
     Chart.register(ChartDataLabels);
     view.on("click", (event) => {
       view.hitTest(event).then((hitTestResult) => {
-        if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
+        if (hitTestResult.results[0].graphic.id) {
           // Close legend expand
           if (expand.expanded = true) {
             expand.expanded = false
