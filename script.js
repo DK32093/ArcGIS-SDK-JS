@@ -56,8 +56,19 @@ require(["esri/config",
       }
     });
 
+    // Desktop settings
+    let mobile = "f"
+    if (window.innerWidth >= 500) {
+      const infoButtonPair = document.getElementById("infoButtonPair")
+      const triangle = document.createElement("img")
+      triangle.src = "assets/triangle.svg"
+      triangle.id = "triangle"
+      infoButtonPair.appendChild(triangle)
+    }
+
     // Mobile settings
     if (window.innerWidth < 500) {
+      mobile = "t"
       // Change flex display 
       const aboutMe = document.getElementById("aboutMe");
       aboutMe.style.display = "block"
@@ -175,17 +186,21 @@ require(["esri/config",
     // Info button: Remove and add welcome div on click
     const infoButton = document.getElementById("infoButton");
     infoButton.classList.add("close")
-    const triangle = document.getElementById("triangle");
+    //const triangle = document.getElementById("triangle");
     const welcomeContainer = document.getElementById("welcomeContainer");
     const closeButtons = document.querySelectorAll(".close")
     closeButtons.forEach(button => {
       button.addEventListener("click", function() {
         if (welcomeContainer.style.display === "none") {
           welcomeContainer.style.display = "unset"
-          triangle.style.display = "unset"
+          if (mobile === "f") {
+            triangle.style.display = "unset"
+          }
         } else {
           welcomeContainer.style.display = "none"
-          triangle.style.display = "none"
+          if (mobile === "f") {
+            triangle.style.display = "none"
+          }
         }
       });
     })
