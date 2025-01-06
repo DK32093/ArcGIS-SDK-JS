@@ -277,7 +277,7 @@ require(["esri/config",
 
             //Adjust chart height for wide screens
             if (window.innerHeight < 600) {
-              chartDiv.style.height = "75vh"
+              chartDiv.style.height = "70vh"
             }
 
             // Add event listener to close button

@@ -14,11 +14,8 @@ button {
 #infoContainer {
   position: fixed;
   display: flex;
-  width: 75vw;
-  max-width: 60rem;
-  min-width: 40rem;
-  max-height: 50rem;
-  overflow: hidden;
+  width: auto;
+  
   top: 50%;
   transform: translate(0%, -50%);
   align-items: center;
@@ -29,6 +26,11 @@ button {
   color: #ffffff;
   padding: 1rem;
   border-radius: 0.25rem;
+  width: 75vw;
+  max-width: 60rem;
+  min-width: 40rem;
+  max-height: 90vh;
+  overflow: scroll;
 }
 
 #mobileCloseButton {
