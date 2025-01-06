@@ -19,7 +19,8 @@ require(["esri/config",
          "esri/layers/support/LabelClass",
          "esri/symbols/TextSymbol",
          "esri/widgets/Expand",
-         "esri/core/promiseUtils"], 
+         "esri/core/promiseUtils",
+         "esri/widgets/ScaleBar"], 
   (esriConfig, 
    Map, 
    MapView, 
@@ -41,7 +42,8 @@ require(["esri/config",
    LabelClass,
    TextSymbol,
    Expand,
-   promiseUtils) => { 
+   promiseUtils,
+   ScaleBar) => { 
     const map = new Map({
       basemap: "streets-vector"
     });
@@ -55,6 +57,12 @@ require(["esri/config",
         minZoom: 8
       }
     });
+
+    const scaleBar = new ScaleBar({
+      view: view
+    });
+    
+    view.ui.add(scaleBar, "bottom-left");
 
     // Mobile settings
     let mobile = "f"
