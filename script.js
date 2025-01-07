@@ -1,46 +1,22 @@
-require(["esri/config",
-         "esri/Map", 
+require(["esri/Map", 
          "esri/views/MapView", 
          "esri/layers/ImageryLayer",
          "esri/layers/FeatureLayer",
-         "esri/layers/GeoJSONLayer",
-         "esri/Graphic",
-         "esri/layers/GraphicsLayer",
          "esri/symbols/SimpleFillSymbol",
          "esri/rest/support/Query",
-         "esri/request",
-         "esri/widgets/Legend",
-         "esri/core/reactiveUtils",
-         "esri/layers/support/RasterFunction",
-         "esri/geometry/Polygon",
-         "esri/rest/support/ImageIdentifyParameters",
          "esri/rest/support/ImageHistogramParameters",
          "esri/widgets/Histogram",
-         "esri/layers/support/LabelClass",
-         "esri/symbols/TextSymbol",
          "esri/widgets/Expand",
          "esri/core/promiseUtils",
          "esri/widgets/ScaleBar"], 
-  (esriConfig, 
-   Map, 
+  (Map, 
    MapView, 
    ImageryLayer, 
    FeatureLayer, 
-   GeoJSONLayer, 
-   Graphic, 
-   GraphicsLayer, 
    SimpleFillSymbol, 
    Query, 
-   esriRequest, 
-   Legend,
-   reactiveUtils,
-   RasterFunction,
-   Polygon,
-   ImageIdentifyParameters,
    ImageHistogramParameters,
    Histogram,
-   LabelClass,
-   TextSymbol,
    Expand,
    promiseUtils,
    ScaleBar) => { 
@@ -58,14 +34,13 @@ require(["esri/config",
       }
     });
 
+    // Add scale bar
     const scaleBarContainer = document.getElementById("scaleBarContainer")
     const scaleBar = new ScaleBar({
       view: view,
       container: scaleBarContainer
     });
     
-    view.ui.add(scaleBar, "bottom-right");
-
     // Mobile settings
     let mobile = "f"
     if (window.innerWidth < 500) {
@@ -512,7 +487,6 @@ require(["esri/config",
                 symbol: polygonSymbol,
                 id: feature.attributes.HUC12,
                 name: feature.attributes.NAME,
-                length: feature.attributes.Shape__Length,
                 area: feature.attributes.Shape__Area
               }
             })
