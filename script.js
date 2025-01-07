@@ -168,7 +168,7 @@ require(["esri/Map",
     const welcomeContainer = document.getElementById("welcomeContainer");
     const closeButtons = document.querySelectorAll(".close")
     closeButtons.forEach(button => {
-      button.addEventListener("click", function() {
+      button.addEventListener("click", () => {
         if (welcomeContainer.style.display === "none") {
           welcomeContainer.style.display = "unset"
           triangle.style.display = "unset"
@@ -272,7 +272,7 @@ require(["esri/Map",
               chartDiv.append(expandChartButton)
 
               //listener
-              expandChartButton.addEventListener("click", function() {
+              expandChartButton.addEventListener("click", () => {
                 expandChartButton.remove()
                 chartDiv.style.maxWidth = "none"
                 chartDiv.style.width = "100vw"
@@ -281,7 +281,7 @@ require(["esri/Map",
                 minChartButton.innerText = "-"
                 minChartButton.id = "minChartButton"
                 chartDiv.append(minChartButton)
-                minChartButton.addEventListener("click", function() {
+                minChartButton.addEventListener("click", () => {
                   chartDiv.style.maxWidth = "30rem"
                   chartDiv.style.width = "50vw"
                   if (window.innerHeight < 600) {
@@ -296,7 +296,7 @@ require(["esri/Map",
             }
 
             // Add event listener to close button
-            closeButton.addEventListener("mouseup", function() {
+            closeButton.addEventListener("mouseup", () => {
               let chartStatus = Chart.getChart("histogramDiv");
               destroyChart(chartStatus)
               previousFeature.symbol = polygonSymbol
@@ -424,7 +424,7 @@ require(["esri/Map",
       opacityLabel.innerText = `Land Cover Opacity: 75%`;
 
       // Set up event listener for slider input changes
-      opacitySlider.addEventListener("input", function (event) {
+      opacitySlider.addEventListener("input", (event) => {
         const opacityValue = event.target.value;
         Sentinel2.opacity = opacityValue / 100;
         opacityLabel.innerText = `Land Cover Opacity: ${opacityValue}%`;
