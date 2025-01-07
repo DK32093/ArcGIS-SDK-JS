@@ -7,7 +7,6 @@ require(["esri/Map",
          "esri/rest/support/ImageHistogramParameters",
          "esri/widgets/Histogram",
          "esri/widgets/Expand",
-         "esri/core/promiseUtils",
          "esri/widgets/ScaleBar",
          "esri/core/reactiveUtils"], 
   (Map, 
@@ -19,7 +18,6 @@ require(["esri/Map",
    ImageHistogramParameters,
    Histogram,
    Expand,
-   promiseUtils,
    ScaleBar,
    reactiveUtils) => { 
     const map = new Map({
@@ -471,7 +469,7 @@ require(["esri/Map",
         WBD_HUC12.queryFeatures(query2).then((featureSet) => {
           console.log(featureSet.features.length)
           reactiveUtils.whenOnce(() =>
-            featureSet.features.length === 157
+            featureSet.features.length === 157 // wait to ensure size-check works properly
           ).then(() => {
             const features2 = featureSet.features;
             // Check watershed size to prevent request-size-limit errors 
