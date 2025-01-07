@@ -3,6 +3,7 @@
 As an aspiring geospatial developer, I am constantly looking for new opportunities to expand my programming skills while working with geospatial data. For this project, I was excited to dive into the ArcGIS Maps SDK for JavaScript and see what I could create using the fantastic free resources provided by ESRI. Working without a paid subscription or an API key, I crafted a responsive cross-platform web application that shows users the distribution of different land cover types within subwatersheds near Boston, Massachusetts using data directly from the ArcGIS Living Atlas of the World.
 
 My process:
+
 •	I pulled the Sentinel-2 10m LULC data and set the time extent to 2023
 
 •	I used queries to retrieve the subwatersheds (HUC 12s) within the Massachusetts-Rhode Island Coastal subregion (HUC 4)
