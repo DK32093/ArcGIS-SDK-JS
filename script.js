@@ -8,7 +8,8 @@ require(["esri/Map",
          "esri/widgets/Histogram",
          "esri/widgets/Expand",
          "esri/core/promiseUtils",
-         "esri/widgets/ScaleBar"], 
+         "esri/widgets/ScaleBar",
+         "esri/core/reactiveUtils"], 
   (Map, 
    MapView, 
    ImageryLayer, 
@@ -19,7 +20,8 @@ require(["esri/Map",
    Histogram,
    Expand,
    promiseUtils,
-   ScaleBar) => { 
+   ScaleBar,
+   reactiveUtils) => { 
     const map = new Map({
       basemap: "streets-vector"
     });
@@ -467,8 +469,11 @@ require(["esri/Map",
         
         // Execute second query
         WBD_HUC12.queryFeatures(query2).then((featureSet) => {
-          promiseUtils.when(featureSet).then((readyFeatures) => {
-            const features2 = readyFeatures.features;
+          console.log(featureSet.features.length)
+          reactiveUtils.whenOnce(() =>
+            featureSet.features.length === 157
+          ).then(() => {
+            const features2 = featureSet.features;
             // Check watershed size to prevent request-size-limit errors 
             for (feature of features2) {
               const length = feature.attributes.Shape__Length
@@ -481,7 +486,7 @@ require(["esri/Map",
                 features2.splice(index, 1);
               }
             }
-            const geojson2 = features2.map((feature) => {
+            const watersheds = features2.map((feature) => {
               return {
                 geometry: feature.geometry,
                 symbol: polygonSymbol,
@@ -490,7 +495,7 @@ require(["esri/Map",
                 area: feature.attributes.Shape__Area
               }
             })
-            view.graphics.addMany(geojson2);
+            view.graphics.addMany(watersheds);
           })
         });
       });
