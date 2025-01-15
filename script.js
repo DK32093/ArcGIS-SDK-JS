@@ -70,11 +70,31 @@ require(["esri/Map",
       welcomeContainer.append(mobileCloseButton)
     }
 
+    // Get land cover data
     const Sentinel2 = new ImageryLayer({
       url: "https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer"
     });
+    
+    // Set land cover time extent to 2023
+    const timeExtent = {
+      start: new Date(Date.UTC(2023, 0, 1)),
+      end: new Date(Date.UTC(2023, 11, 31))
+    };
+    view.timeExtent = timeExtent;
 
-    const SentinelColors = [
+    // Get HUC 4 watersheds
+    const WBD_HUC4 = new FeatureLayer({
+      url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer?f=pjson"
+    });
+
+    // Get HUC 12 watersheds
+    const WBD_HUC12 = new FeatureLayer({
+      url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer",
+      simplify: true
+    });
+
+     // Create custom legend
+     const SentinelColors = [
       'rgb(26, 91, 171)',
       'rgb(53, 130, 33)',
       'rgb(135, 209, 158)',
@@ -97,24 +117,31 @@ require(["esri/Map",
       "Clouds", 
       "Rangeland"
     ]
-    
-    // Set land cover time extent to 2023
-    const timeExtent = {
-      start: new Date(Date.UTC(2023, 0, 1)),
-      end: new Date(Date.UTC(2023, 11, 31))
-    };
-    view.timeExtent = timeExtent;
 
-    // Get HUC 4 watersheds
-    const WBD_HUC4 = new FeatureLayer({
-      url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer?f=pjson"
-    });
-
-    // Get HUC 12 watersheds
-    const WBD_HUC12 = new FeatureLayer({
-      url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_12s/FeatureServer",
-      simplify: true
-    });
+     const sentinel2Leg = document.getElementById("sentinel2Leg")
+     SentinelLabels.forEach((name, index) => {
+       const legPair = document.createElement("div")
+       legPair.classList.add("legPair"); 
+       const legColor = document.createElement("div")
+       legColor.classList.add("legColor"); 
+       const legLabel = document.createElement("div")
+       legLabel.classList.add("legLabel"); 
+       legColor.style.backgroundColor = SentinelColors[index]
+       legLabel.innerText = name
+       legPair.appendChild(legColor)
+       legPair.appendChild(legLabel)
+       sentinel2Leg.appendChild(legPair)
+     });
+ 
+     const customLegend = document.getElementById("customLegend")
+     const expand = new Expand({
+       view: view,
+       content: customLegend,
+       expandIconClass: "esri-icon-description",
+       expanded: true
+     });
+ 
+     view.ui.add(expand, "top-right")
 
     // Default HUC border style
     const polygonSymbol = new SimpleFillSymbol({
@@ -159,7 +186,7 @@ require(["esri/Map",
       return featureset
     }
 
-    // The callback function to filter watersheds by size and add to map
+    // The callback function to add the filtered watersheds to the map
     function createMapGraphics(featureset) {
       const watersheds = featureset.map((feature) => {
         return {
@@ -180,7 +207,7 @@ require(["esri/Map",
       const checkInterval = setInterval(() => {
         console.log("check")
         i += 1
-        if (i === 30) {
+        if (i === 25) {
           alert("Sorry, the data was slow to load. Please refresh the page :)")
         }
         const filteredWatersheds = callback(collection)
@@ -190,7 +217,7 @@ require(["esri/Map",
           createMapGraphics(filteredWatersheds)
           clearInterval(checkInterval);
         }
-      }, 300) // Check every 300 milliseconds
+      }, 300) // Check every 300 milliseconds until cleared
     }
 
     // Function for clearing chart
@@ -209,7 +236,7 @@ require(["esri/Map",
       });
     }
 
-    // Info button: Remove and add welcome div on click
+    // Info button: Remove or add welcome div on click
     const infoButton = document.getElementById("infoButton");
     infoButton.classList.add("close")
     const triangle = document.getElementById("triangle")
@@ -435,33 +462,7 @@ require(["esri/Map",
           });
         }
       })
-    })
-
-    // Create custom legend
-    const sentinel2Leg = document.getElementById("sentinel2Leg")
-    SentinelLabels.forEach((name, index) => {
-      const legPair = document.createElement("div")
-      legPair.classList.add("legPair"); 
-      const legColor = document.createElement("div")
-      legColor.classList.add("legColor"); 
-      const legLabel = document.createElement("div")
-      legLabel.classList.add("legLabel"); 
-      legColor.style.backgroundColor = SentinelColors[index]
-      legLabel.innerText = name
-      legPair.appendChild(legColor)
-      legPair.appendChild(legLabel)
-      sentinel2Leg.appendChild(legPair)
     });
-
-    const customLegend = document.getElementById("customLegend")
-    const expand = new Expand({
-      view: view,
-      content: customLegend,
-      expandIconClass: "esri-icon-description",
-      expanded: true
-    });
-
-    view.ui.add(expand, "top-right")
 
     view.when().then(() => {
       
@@ -554,7 +555,6 @@ require(["esri/Map",
         // Execute second query
         WBD_HUC12.queryFeatures(query2).then((featureSet) => {
             const features2 = featureSet.features;
-            
             waitForCollectionLength(features2, 140, filterWatersheds)
         });
       });
