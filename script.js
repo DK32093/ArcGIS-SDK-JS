@@ -8,7 +8,8 @@ require(["esri/Map",
          "esri/widgets/Histogram",
          "esri/widgets/Expand",
          "esri/widgets/ScaleBar",
-         "esri/core/reactiveUtils"], 
+         "esri/layers/support/RasterFunction",
+         "esri/geometry/geometryEngine"], 
   (Map, 
    MapView, 
    ImageryLayer, 
@@ -19,7 +20,8 @@ require(["esri/Map",
    Histogram,
    Expand,
    ScaleBar,
-   reactiveUtils) => { 
+   RasterFunction,
+   geometryEngine) => { 
     const map = new Map({
       basemap: "streets-vector"
     });
@@ -72,7 +74,9 @@ require(["esri/Map",
       url: "https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer",
       format: "jpgpng",
     });
-    map.add(Sentinel2);
+    
+    console.log(Sentinel2.renderer)
+    //map.add(Sentinel2);
 
     const SentinelColors = [
       'rgb(26, 91, 171)',
@@ -142,21 +146,8 @@ require(["esri/Map",
         width: 2
       }
     });
-    
-    // Function to wait for featureset to load before area/length filter
-    function waitForCollectionLength(collection, targetLength, callback) {
-      const checkInterval = setInterval(() => {
-        console.log("check")
-        if (collection.length === targetLength) {
-          callback(collection);
-          clearInterval(checkInterval);
-        }
-      }, 300) // Check every 300 milliseconds
-    }
 
-    // The callback function to filter watersheds by size and add to map
-    function createMapGraphics(featureset) {
-      // Check watershed size to prevent request-size-limit errors 
+    function filterWatersheds(featureset) {
       for (feature of featureset) {
         const length = feature.attributes.Shape__Length
         const area = feature.attributes.Shape__Area
@@ -168,6 +159,12 @@ require(["esri/Map",
           featureset.splice(index, 1);
         }
       }
+      return featureset
+    }
+
+    // The callback function to filter watersheds by size and add to map
+    function createMapGraphics(featureset) {
+      // Check watershed size to prevent request-size-limit errors 
       const watersheds = featureset.map((feature) => {
         return {
           geometry: feature.geometry,
@@ -178,6 +175,20 @@ require(["esri/Map",
         }
       })
       view.graphics.addMany(watersheds);
+    }
+
+     // Function to wait for featureset to load before area/length filter
+     function waitForCollectionLength(collection, targetLength, callback) {
+      const checkInterval = setInterval(() => {
+        console.log("check")
+        const filteredWatersheds = filterWatersheds(collection)
+        if (filteredWatersheds.length !== targetLength) {
+          callback(filteredWatersheds);
+        } else {
+          createMapGraphics(filteredWatersheds)
+          clearInterval(checkInterval);
+        }
+      }, 300) // Check every 300 milliseconds
     }
 
     // Function for clearing chart
@@ -493,6 +504,20 @@ require(["esri/Map",
         features.map((feature) => {
           return geom = feature.geometry
         });
+
+        const generalizedPolygon = geometryEngine.generalize(geom, 100, true);
+        const buffer = geometryEngine.geodesicBuffer(generalizedPolygon, 20, "kilometers");
+
+        const clipFunction = new RasterFunction({
+          functionName: "Clip",
+          functionArguments: {
+            ClippingGeometry: buffer,
+            ClippingType: 1
+          }
+        });
+
+        Sentinel2.rasterFunction = clipFunction;
+        map.add(Sentinel2);
         
         // Second query: get subwatersheds within subregion
         const query2 = new Query({
@@ -505,7 +530,7 @@ require(["esri/Map",
         // Execute second query
         WBD_HUC12.queryFeatures(query2).then((featureSet) => {
             const features2 = featureSet.features;
-            waitForCollectionLength(features2, 157, createMapGraphics)
+            waitForCollectionLength(features2, 140, filterWatersheds)
         });
       });
     })
