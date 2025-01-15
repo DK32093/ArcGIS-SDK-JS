@@ -23,7 +23,7 @@ require(["esri/Map",
    RasterFunction,
    geometryEngine) => { 
     const map = new Map({
-      basemap: "streets-night-vector"
+      basemap: "streets-vector"
     });
 
     const view = new MapView({
@@ -307,7 +307,10 @@ require(["esri/Map",
           let params = new ImageHistogramParameters({
             geometry:  clickedGeom,
           });
-          view.goTo({geometry: clickedGeom, zoom: 10})
+          view.goTo({
+            geometry: clickedGeom, 
+            zoom: 10
+          })
           Sentinel2.computeHistograms(params).then((result) => {
             // Filter out empty and uneeded classes
             const allCounts = result.histograms[0].counts
