@@ -175,9 +175,14 @@ require(["esri/Map",
     }
 
      // Function to wait for featureset to load before area/length filter
+    let i  = 0
     function waitForCollectionLength(collection, targetLength, callback) {
       const checkInterval = setInterval(() => {
         console.log("check")
+        i += 1
+        if (i > 30) {
+          alert("Sorry, the data was slow to load. Please refresh the page :)")
+        }
         const filteredWatersheds = callback(collection)
         if (filteredWatersheds.length !== targetLength) {
           callback(filteredWatersheds);
@@ -549,6 +554,7 @@ require(["esri/Map",
         // Execute second query
         WBD_HUC12.queryFeatures(query2).then((featureSet) => {
             const features2 = featureSet.features;
+            
             waitForCollectionLength(features2, 140, filterWatersheds)
         });
       });
