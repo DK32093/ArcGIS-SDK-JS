@@ -71,12 +71,8 @@ require(["esri/Map",
     }
 
     const Sentinel2 = new ImageryLayer({
-      url: "https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer",
-      format: "jpgpng",
+      url: "https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer"
     });
-    
-    console.log(Sentinel2.renderer)
-    //map.add(Sentinel2);
 
     const SentinelColors = [
       'rgb(26, 91, 171)',
@@ -175,13 +171,14 @@ require(["esri/Map",
         }
       })
       view.graphics.addMany(watersheds);
+      console.log(view.graphics.length)
     }
 
      // Function to wait for featureset to load before area/length filter
-     function waitForCollectionLength(collection, targetLength, callback) {
+    function waitForCollectionLength(collection, targetLength, callback) {
       const checkInterval = setInterval(() => {
         console.log("check")
-        const filteredWatersheds = filterWatersheds(collection)
+        const filteredWatersheds = callback(collection)
         if (filteredWatersheds.length !== targetLength) {
           callback(filteredWatersheds);
         } else {
@@ -505,18 +502,40 @@ require(["esri/Map",
           return geom = feature.geometry
         });
 
+        // Buffer HUC4 to cover all watersheds and generalize to speed up
         const generalizedPolygon = geometryEngine.generalize(geom, 100, true);
         const buffer = geometryEngine.geodesicBuffer(generalizedPolygon, 20, "kilometers");
 
+        // Clip the land caver data using the buffered geometry
         const clipFunction = new RasterFunction({
           functionName: "Clip",
           functionArguments: {
             ClippingGeometry: buffer,
-            ClippingType: 1
-          }
+          },
+          outputPixelType: "U8" 
         });
 
-        Sentinel2.rasterFunction = clipFunction;
+        // Apply color scheme to clipped raster data
+        const colorFunction = new RasterFunction({
+          functionName: "Colormap",
+          functionArguments: {
+            ClippingGeometry: buffer,
+            Colormap: [ 
+              [1, 26, 91, 171],
+              [2, 53, 130, 33],
+              [4, 135, 209, 158],
+              [5, 255, 219, 92],
+              [7, 237, 2, 42],
+              [8, 237, 233, 228],
+              [9, 200, 200, 200],
+              [10, 242, 250, 255],
+              [11, 239, 207, 168] 
+            ],
+            Raster: clipFunction // chain clip function 
+          }
+        });
+        
+        Sentinel2.rasterFunction = colorFunction;
         map.add(Sentinel2);
         
         // Second query: get subwatersheds within subregion
