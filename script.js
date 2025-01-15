@@ -143,6 +143,7 @@ require(["esri/Map",
       }
     });
 
+    // Function to check watershed size to prevent request-size-limit errors 
     function filterWatersheds(featureset) {
       for (feature of featureset) {
         const length = feature.attributes.Shape__Length
@@ -160,7 +161,6 @@ require(["esri/Map",
 
     // The callback function to filter watersheds by size and add to map
     function createMapGraphics(featureset) {
-      // Check watershed size to prevent request-size-limit errors 
       const watersheds = featureset.map((feature) => {
         return {
           geometry: feature.geometry,
@@ -174,7 +174,7 @@ require(["esri/Map",
       console.log(view.graphics.length)
     }
 
-     // Function to wait for featureset to load before area/length filter
+    // Function to wait for featureset to load before area/length filter
     let i  = 0
     function waitForCollectionLength(collection, targetLength, callback) {
       const checkInterval = setInterval(() => {
@@ -185,7 +185,7 @@ require(["esri/Map",
         }
         const filteredWatersheds = callback(collection)
         if (filteredWatersheds.length !== targetLength) {
-          callback(filteredWatersheds);
+          return
         } else {
           createMapGraphics(filteredWatersheds)
           clearInterval(checkInterval);
