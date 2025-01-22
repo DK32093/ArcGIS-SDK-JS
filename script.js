@@ -207,7 +207,7 @@ require(["esri/Map",
       const checkInterval = setInterval(() => {
         console.log("check")
         i += 1
-        if (i === 25) {
+        if (i === 20) {
           alert("Sorry, the data was slow to load. Please refresh the page :)")
         }
         const filteredWatersheds = callback(collection)
