@@ -9,7 +9,8 @@ require(["esri/Map",
          "esri/widgets/Expand",
          "esri/widgets/ScaleBar",
          "esri/layers/support/RasterFunction",
-         "esri/geometry/geometryEngine"], 
+         "esri/geometry/geometryEngine",
+         "esri/Graphic"], 
   (Map, 
    MapView, 
    ImageryLayer, 
@@ -21,7 +22,8 @@ require(["esri/Map",
    Expand,
    ScaleBar,
    RasterFunction,
-   geometryEngine) => { 
+   geometryEngine,
+   Graphic) => { 
     const map = new Map({
       basemap: "streets-vector"
     });
@@ -84,7 +86,7 @@ require(["esri/Map",
 
     // Get HUC 4 watersheds
     const WBD_HUC4 = new FeatureLayer({
-      url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer?f=pjson"
+      url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/Watershed_Boundary_Dataset_HUC_4s/FeatureServer"
     });
 
     // Get HUC 12 watersheds
@@ -171,34 +173,29 @@ require(["esri/Map",
     });
 
     // Function to check watershed size to prevent request-size-limit errors 
-    function filterWatersheds(featureset) {
-      for (feature of featureset) {
-        const length = feature.attributes.Shape__Length
-        const area = feature.attributes.Shape__Area
-        if (length > 130000 || area > 320000000) {
-          const id = feature.attributes.HUC12
-          const index = featureset.findIndex(feature => {
-            return feature.attributes.HUC12 === id;
-          });
-          featureset.splice(index, 1);
-        }
-      }
-      return featureset
+    function filterWatersheds(features) {
+      return features.filter(f =>
+        f.attributes.Shape__Area < 3.2e8 &&
+        f.attributes.Shape__Length < 1.3e5
+      );
     }
+
 
     // The callback function to add the filtered watersheds to the map
     function createMapGraphics(featureset) {
       const watersheds = featureset.map((feature) => {
-        return {
+        return new Graphic({
           geometry: feature.geometry,
           symbol: polygonSymbol,
-          id: feature.attributes.HUC12,
-          name: feature.attributes.NAME,
-          area: feature.attributes.Shape__Area
-        }
+          attributes: {
+            HUC12: feature.attributes.HUC12,
+            NAME: feature.attributes.name,
+            AREA: feature.attributes.Shape__Area
+          }
+        })
       })
       view.graphics.addMany(watersheds);
-      console.log(view.graphics.length)
+      //console.log(view.graphics.length)
     }
 
     // Function to wait for featureset to load before area/length filter
@@ -257,213 +254,213 @@ require(["esri/Map",
     // Highlight on hover logic
     let previousID;
     let previousGraphic;
-    view.graphics.watch("length", () => {
-      if (window.innerWidth > 500) { // not on mobile
-        view.on("pointer-move", (event) => {
-          view.hitTest(event).then((hitTestResult) => {
-            if (hitTestResult.results.length > 0 && hitTestResult.results[0].graphic) {
-              const graphic = hitTestResult.results[0].graphic;
-              HUC_ID = graphic.id 
-              if(previousID !== HUC_ID){
-                if (previousGraphic) {
-                  if (previousGraphic.symbol === highlightSymbol){
-                    previousGraphic.symbol = polygonSymbol
-                  }
-                }
-                if (graphic.symbol !== chartHighlight) {
-                  graphic.symbol = highlightSymbol;
-                }
-                previousID = HUC_ID
-                previousGraphic = graphic
-              }
-            }
-          })
-        })
-      }
-    });
+    if (window.innerWidth > 500) {
+      view.on("pointer-move", (event) => {
+        view.hitTest(event).then((response) => {
+          const result = response.results.find(r => r.graphic);
+          if (!result) return;
+
+          const graphic = result.graphic;
+          const HUC_ID = graphic.attributes.HUC12;
+
+          if (previousGraphic && previousGraphic !== graphic) {
+            previousGraphic.symbol = polygonSymbol;
+          }
+
+          if (graphic.symbol !== chartHighlight) {
+            graphic.symbol = highlightSymbol;
+          }
+
+          previousGraphic = graphic;
+        });
+      });
+    }
+
 
     // Generate chart on click
     let previousFeature;
     Chart.register(ChartDataLabels);
     view.on("click", (event) => {
       view.hitTest(event).then((hitTestResult) => {
-        if (hitTestResult.results[0].graphic.id) {
-          // Close legend expand
-          if (expand.expanded = true) {
-            expand.expanded = false
+        const result = hitTestResult.results.find(r => r.graphic);
+        if (!result) return;
+        // Close legend expand
+        if (expand.expanded === true) {
+          expand.expanded = false
+        }
+        const clickedFeature = result.graphic
+        console.log(clickedFeature.attributes);
+
+        // Highlight clicked feature and reset previous feature
+        clickedFeature.symbol = chartHighlight
+        if (previousFeature) {
+          if (previousFeature !== clickedFeature) {
+            previousFeature.symbol = polygonSymbol
           }
-          const clickedFeature = hitTestResult.results[0].graphic
-          // Highlight clicked feature and reset previous feature
-          clickedFeature.symbol = chartHighlight
-          if (previousFeature) {
-            if (previousFeature !== clickedFeature) {
-              previousFeature.symbol = polygonSymbol
-            }
+        }
+        previousFeature = clickedFeature
+        const clickedGeom = clickedFeature.geometry
+        const watershedName = clickedFeature.attributes.NAME
+        const watershedArea = (clickedFeature.attributes.AREA/1000000).toFixed(2)
+        let params = new ImageHistogramParameters({
+          geometry:  clickedGeom,
+        });
+        view.goTo({
+          geometry: clickedGeom, 
+          zoom: 10
+        })
+        Sentinel2.computeHistograms(params).then((result) => {
+          // Filter out empty and uneeded classes
+          const allCounts = result.histograms[0].counts
+          const ranges = [[1,2], [4,5], [7,11]]
+          const filteredData = filterHist(allCounts, ranges);
+          
+          // Sum pixels in watershed
+          const sum = result.histograms[0].counts.reduce((accumulator, current) => accumulator + current, 0);
+
+          // Clear canvas for new chart
+          let chartStatus = Chart.getChart("histogramDiv");
+          if (chartStatus !== undefined) {
+            destroyChart(chartStatus)
           }
-          previousFeature = clickedFeature
-          const clickedGeom = clickedFeature.geometry
-          const watershedName = clickedFeature.name
-          const watershedArea = (clickedFeature.area/1000000).toFixed(2)
-          let params = new ImageHistogramParameters({
-            geometry:  clickedGeom,
-          });
-          view.goTo({
-            geometry: clickedGeom, 
-            zoom: 10
-          })
-          Sentinel2.computeHistograms(params).then((result) => {
-            // Filter out empty and uneeded classes
-            const allCounts = result.histograms[0].counts
-            const ranges = [[1,2], [4,5], [7,11]]
-            const filteredData = filterHist(allCounts, ranges);
-            
-            // Sum pixels in watershed
-            const sum = result.histograms[0].counts.reduce((accumulator, current) => accumulator + current, 0);
 
-            // Clear canvas for new chart
-            let chartStatus = Chart.getChart("histogramDiv");
-            if (chartStatus !== undefined) {
-              destroyChart(chartStatus)
-            }
+          // Create and append the new canvas
+          const chartDiv = document.createElement("div");
+          chartDiv.id = "chartDiv"
+          document.body.appendChild(chartDiv)
+          const closeButton = document.createElement("button");
+          closeButton.innerText = "X"
+          closeButton.id = "closeButton"
+          const histogramDiv = document.createElement("canvas");
+          histogramDiv.id = "histogramDiv";
+          chartDiv.append(closeButton, histogramDiv)
 
-            // Create and append the new canvas
-            const chartDiv = document.createElement("div");
-            chartDiv.id = "chartDiv"
-            document.body.appendChild(chartDiv)
-            const closeButton = document.createElement("button");
-            closeButton.innerText = "X"
-            closeButton.id = "closeButton"
-            const histogramDiv = document.createElement("canvas");
-            histogramDiv.id = "histogramDiv";
-            chartDiv.append(closeButton, histogramDiv)
+          // Adjust chart height for wide screens
+          if (window.innerHeight < 600) {
+            chartDiv.style.height = "70vh"
+          }
 
-            // Adjust chart height for wide screens
-            if (window.innerHeight < 600) {
-              chartDiv.style.height = "70vh"
-            }
+          // Add expanded chart view option for desktop
+          if (mobile === "f") {
+            const expandChartButton = document.createElement("button");
+            expandChartButton.innerText = "+"
+            expandChartButton.id = "expandChartButton"
+            chartDiv.append(expandChartButton)
 
-            // Add expanded chart view option for desktop
-            if (mobile === "f") {
-              const expandChartButton = document.createElement("button");
-              expandChartButton.innerText = "+"
-              expandChartButton.id = "expandChartButton"
-              chartDiv.append(expandChartButton)
-
-              //listener
-              expandChartButton.addEventListener("click", () => {
-                expandChartButton.remove()
-                chartDiv.style.maxWidth = "none"
-                chartDiv.style.width = "100vw"
-                chartDiv.style.height = "90vh"
-                const minChartButton = document.createElement("button");
-                minChartButton.innerText = "-"
-                minChartButton.id = "minChartButton"
-                chartDiv.append(minChartButton)
-                minChartButton.addEventListener("click", () => {
-                  chartDiv.style.maxWidth = "30rem"
-                  chartDiv.style.width = "50vw"
-                  if (window.innerHeight < 600) {
-                    chartDiv.style.height = "70vh"
-                  } else {
-                    chartDiv.style.height = "40vh"
-                  }
-                  minChartButton.remove()
-                  chartDiv.append(expandChartButton)
-                })
+            //listener
+            expandChartButton.addEventListener("click", () => {
+              expandChartButton.remove()
+              chartDiv.style.maxWidth = "none"
+              chartDiv.style.width = "100vw"
+              chartDiv.style.height = "90vh"
+              const minChartButton = document.createElement("button");
+              minChartButton.innerText = "-"
+              minChartButton.id = "minChartButton"
+              chartDiv.append(minChartButton)
+              minChartButton.addEventListener("click", () => {
+                chartDiv.style.maxWidth = "30rem"
+                chartDiv.style.width = "50vw"
+                if (window.innerHeight < 600) {
+                  chartDiv.style.height = "70vh"
+                } else {
+                  chartDiv.style.height = "40vh"
+                }
+                minChartButton.remove()
+                chartDiv.append(expandChartButton)
               })
-            }
-
-            // Add event listener to close button
-            closeButton.addEventListener("mouseup", () => {
-              let chartStatus = Chart.getChart("histogramDiv");
-              destroyChart(chartStatus)
-              previousFeature.symbol = polygonSymbol
             })
+          }
 
-            // Create new chart
-            const histogramWidget = new Histogram({
-              container: "chartDiv"
-            });
+          // Add event listener to close button
+          closeButton.addEventListener("mouseup", () => {
+            let chartStatus = Chart.getChart("histogramDiv");
+            destroyChart(chartStatus)
+            previousFeature.symbol = polygonSymbol
+          })
 
-            new Chart(histogramDiv, {
-              type: 'bar',
-              data: {
-                labels: SentinelLabels,
-                datasets: [{
-                  data: (filteredData.map(number => (number / sum) * 100)),
-                  borderWidth: 1,
-                  backgroundColor: SentinelColors
-                }]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  title: {
-                    display: true,
-                    color: "black",
-                    text: [watershedName, "Area: " + watershedArea + " km2"],
-                    font: {
-                      size: 18,
-                    },
-                    padding: {
-                      bottom: 30 // Add space below the title
-                    }
+          // Create new chart
+          const histogramWidget = new Histogram({
+            container: "chartDiv"
+          });
+
+          new Chart(histogramDiv, {
+            type: 'bar',
+            data: {
+              labels: SentinelLabels,
+              datasets: [{
+                data: (filteredData.map(number => (number / sum) * 100)),
+                borderWidth: 1,
+                backgroundColor: SentinelColors
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: true,
+                  color: "black",
+                  text: [watershedName, "Area: " + watershedArea + " km2"],
+                  font: {
+                    size: 18,
                   },
-                  legend: {
-                    display: false,
-                  },
-                  datalabels: {
-                    formatter: (value, ctx) => {
-                      if (value >= 1 ) {
-                        return displayValue = Math.round(value) + "%"
-                      } else if (value > 0 && value < 1) {
-                        return displayValue = "<1%"
-                      } else {
-                        return ''
-                      }
-                    },
-                    anchor: 'end',
-                    align: 'top',
-                    labels: {
-                      value: {
-                        color: 'black',
-                      }
-                    },
-                    font: {
-                      weight: 'bold',
-                      size: 13,
-                    }
-                  }
-                },
-                scales: {
-                  x: {
-                    ticks: {
-                        maxRotation: 65,
-                        minRotation: 65,
-                        color: 'black',
-                        font: {
-                          size: 15,
-                        } 
-                    },
-                    grid: {
-                      display:false
-                    } 
-                  },
-                  y: {
-                    display: false,
-                  }
-                },
-                layout: {
                   padding: {
-                       top: 10
+                    bottom: 30 // Add space below the title
+                  }
+                },
+                legend: {
+                  display: false,
+                },
+                datalabels: {
+                  formatter: (value, ctx) => {
+                    if (value >= 1 ) {
+                      return displayValue = Math.round(value) + "%"
+                    } else if (value > 0 && value < 1) {
+                      return displayValue = "<1%"
+                    } else {
+                      return ''
+                    }
+                  },
+                  anchor: 'end',
+                  align: 'top',
+                  labels: {
+                    value: {
+                      color: 'black',
+                    }
+                  },
+                  font: {
+                    weight: 'bold',
+                    size: 13,
                   }
                 }
+              },
+              scales: {
+                x: {
+                  ticks: {
+                      maxRotation: 65,
+                      minRotation: 65,
+                      color: 'black',
+                      font: {
+                        size: 15,
+                      } 
+                  },
+                  grid: {
+                    display:false
+                  } 
+                },
+                y: {
+                  display: false,
+                }
+              },
+              layout: {
+                padding: {
+                      top: 10
+                }
               }
-            });
-            view.ui.add(histogramWidget, "bottom-right")
+            }
           });
-        }
+          view.ui.add(histogramWidget, "bottom-right")
+        });
       })
     });
 
@@ -507,9 +504,13 @@ require(["esri/Map",
       // Execute first query
       WBD_HUC4.queryFeatures(query).then((featureSet) => {
         const features = featureSet.features; 
-        features.map((feature) => {
-          return geom = feature.geometry
-        });
+        if (!features.length) {
+          console.error("No HUC4 features returned");
+          return;
+        }
+
+        const geom = features[0].geometry;
+
 
         // Buffer HUC4 to cover all watersheds and generalize to speed up
         const generalizedPolygon = geometryEngine.generalize(geom, 100, true);
@@ -552,13 +553,20 @@ require(["esri/Map",
           geometry: geom,
           spatialRelationship: "intersects",
           returnGeometry: true,
-          outFields: ["*"]
+          outFields: ["HUC12", "NAME", "Shape__Area", "Shape__Length"],
+          maxAllowableOffset: 50 // generalization
         });
-        
+
         // Execute second query
         WBD_HUC12.queryFeatures(query2).then((featureSet) => {
+            console.table(WBD_HUC12.fields);
             const features2 = featureSet.features;
-            waitForCollectionLength(features2, 140, filterWatersheds)
+            const filtered = filterWatersheds(features2);
+            createMapGraphics(filtered);
+            //waitForCollectionLength(features2, 140, filterWatersheds)
+        }).catch((error) => {
+          console.error("HUC12 query failed:", error);
+          alert("Watersheds failed to load. Please refresh.");
         });
       });
     })
