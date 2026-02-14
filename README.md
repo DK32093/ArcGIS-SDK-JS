@@ -1,22 +1,18 @@
-# ArcGIS-SDK-JS
+# ArcGIS-SDK-JS — Sentinel‑2 Land Cover by HUC‑12
 
- For this project, I was excited to dive into the ArcGIS Maps SDK for JavaScript and see what I could create using the free resources provided by ESRI. Working without a paid subscription or an API key, I crafted a responsive web application that shows users the distribution of different land cover types within subwatersheds near Boston, Massachusetts using data directly from the ArcGIS Living Atlas of the World.
+A responsive web app that visualizes Sentinel‑2 10m land‑cover within HUC‑12 subwatersheds around Boston, MA. Click a watershed to view percent cover by class (computed from ArcGIS Living Atlas services) and an interactive Chart.js histogram.
 
-My process:
+## Live demo
+https://dk32093.github.io/ArcGIS-SDK-JS/
 
-•	I pulled the Sentinel-2 10m LULC data and set the time extent to 2023
+## Features
+- Loads Sentinel‑2 10m land‑cover from ArcGIS Living Atlas and clips it to a selected HUC‑4 region.
+- Queries HUC‑12 subwatersheds and renders them as selectable graphics.
+- Computes land‑cover histograms for a selected watershed and displays percentages with Chart.js.
+- Responsive UI with hover highlights, zoom-to, and adjustable land‑cover opacity.
+- Mobile-friendly: Works on mobile and desktop browsers with touch and click interactions.
 
-•	I used queries to retrieve the subwatersheds (HUC 12s) within the Massachusetts-Rhode Island Coastal subregion (HUC 4)
-
-•	I added functionality to extract land cover data from a selected subwatershed and display the data using chart.js
-
-•	I combined the powerful capabilities of the SDK with my own custom content to create an engaging and interactive user experience
-
-Try out the app on mobile or desktop browsers:  https://dk32093.github.io/ArcGIS-SDK-JS/
-
-Land Cover data: https://www.arcgis.com/home/item.html?id=cfcb7609de5f478eb7666240902d4d3d
-
-HUC 4 Subregions data: https://www.arcgis.com/home/item.html?id=b92b73b36ef74c5cba1e3035fce94623
-
-HUC 12 Subwatersheds data:
-https://www.arcgis.com/home/item.html?id=b60aa1d756b245cf9db03a92254af878
+## Data sources
+- Sentinel‑2 10m Land Cover (Image Service): https://www.arcgis.com/home/item.html?id=cfcb7609de5f478eb7666240902d4d3d
+- Watershed Boundary Dataset (HUC‑4 subregions): https://www.arcgis.com/home/item.html?id=b92b73b36ef74c5cba1e3035fce94623
+- Watershed Boundary Dataset (HUC‑12 subwatersheds): https://www.arcgis.com/home/item.html?id=b60aa1d756b245cf9db03a92254af878
