@@ -174,9 +174,9 @@ require(["esri/Map",
 
     // Function to check watershed size to prevent request-size-limit errors 
     function filterWatersheds(features) {
+      console.log(Object.keys(features[0].attributes));
       return features.filter(f =>
-        f.attributes.Shape__Area < 3.2e8 &&
-        f.attributes.Shape__Length < 1.3e5
+        f.attributes.areasqkm < 320
       );
     }
 
@@ -553,15 +553,18 @@ require(["esri/Map",
           geometry: geom,
           spatialRelationship: "intersects",
           returnGeometry: true,
-          outFields: ["HUC12", "NAME", "Shape__Area", "Shape__Length"],
+          outFields: ["HUC12", "name", "areasqkm"],
           maxAllowableOffset: 50 // generalization
         });
 
         // Execute second query
         WBD_HUC12.queryFeatures(query2).then((featureSet) => {
+            console.log("Returned features count:", featureSet.features.length);
             console.table(WBD_HUC12.fields);
             const features2 = featureSet.features;
+            console.log("Before filter:", features2.length);
             const filtered = filterWatersheds(features2);
+            console.log("After filter:", filtered.length);
             createMapGraphics(filtered);
             //waitForCollectionLength(features2, 140, filterWatersheds)
         }).catch((error) => {

@@ -1,6 +1,6 @@
 # ArcGIS-SDK-JS
 
- For this project, I was excited to dive into the ArcGIS Maps SDK for JavaScript and see what I could create using the fantastic free resources provided by ESRI. Working without a paid subscription or an API key, I crafted a responsive web application that shows users the distribution of different land cover types within subwatersheds near Boston, Massachusetts using data directly from the ArcGIS Living Atlas of the World.
+ For this project, I was excited to dive into the ArcGIS Maps SDK for JavaScript and see what I could create using the free resources provided by ESRI. Working without a paid subscription or an API key, I crafted a responsive web application that shows users the distribution of different land cover types within subwatersheds near Boston, Massachusetts using data directly from the ArcGIS Living Atlas of the World.
 
 My process:
 
