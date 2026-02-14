@@ -82,7 +82,7 @@ require(["esri/Map",
       start: new Date(Date.UTC(2023, 0, 1)),
       end: new Date(Date.UTC(2023, 11, 31))
     };
-    view.timeExtent = timeExtent;
+    //view.timeExtent = timeExtent;
 
     // Get HUC 4 watersheds
     const WBD_HUC4 = new FeatureLayer({
@@ -188,9 +188,9 @@ require(["esri/Map",
           geometry: feature.geometry,
           symbol: polygonSymbol,
           attributes: {
-            HUC12: feature.attributes.HUC12,
+            HUC12: feature.attributes.huc12,
             NAME: feature.attributes.name,
-            AREA: feature.attributes.Shape__Area
+            AREA: feature.attributes.areasqkm
           }
         })
       })
@@ -261,7 +261,7 @@ require(["esri/Map",
           if (!result) return;
 
           const graphic = result.graphic;
-          const HUC_ID = graphic.attributes.HUC12;
+          const HUC_ID = graphic.attributes.huc12;
 
           if (previousGraphic && previousGraphic !== graphic) {
             previousGraphic.symbol = polygonSymbol;
@@ -301,7 +301,7 @@ require(["esri/Map",
         previousFeature = clickedFeature
         const clickedGeom = clickedFeature.geometry
         const watershedName = clickedFeature.attributes.NAME
-        const watershedArea = (clickedFeature.attributes.AREA/1000000).toFixed(2)
+        const watershedArea = (clickedFeature.attributes.AREA).toFixed(2)
         let params = new ImageHistogramParameters({
           geometry:  clickedGeom,
         });
